@@ -1,0 +1,122 @@
+# OCR & PDF Processing Platform
+
+This repository contains a Django-based platform for document OCR, PDF processing, file conversion, and translation workflows.
+
+Key capabilities
+
+- OCR images and PDFs using multiple engines (Tesseract, PaddleOCR)
+- Export OCR results to Markdown, TXT, JSON, or searchable PDF
+- PDF editing: merge, split, rotate, crop, watermark, add text/image
+- File conversion: DOCX/TXT/Markdown/Image → PDF
+- Translation pipeline (English ↔ Vietnamese) and export
+- User accounts and job management
+
+This README provides a high-level project overview and quick setup instructions. Detailed architecture and development workflows are under the `docs/` directory.
+
+--
+
+## Main Features
+
+- OCR processing (images, PDFs) with export to Markdown
+- PDF processing tools (merge/split/rotate/crop/watermark)
+- File conversion and PDF generation
+- Text translation pipeline and export
+- Basic user authentication and job orchestration
+
+## Tech Stack
+
+- Backend: Django
+- API: Django REST Framework (planned)
+- OCR: PaddleOCR, Tesseract (engine adapters in `ocr_engine`)
+- PDF processing: PyMuPDF
+- File conversion: WeasyPrint, python-docx, LibreOffice (optional)
+- Frontend: Django templates, Tailwind-compatible static layout
+
+## Project Structure (high level)
+
+- `OCR/` — Django project configuration (settings, urls)
+- `apps/` / top-level apps: `files`, `ocr_engine`, `processing`, `pdf_tools`, `converter`, `translator`, `users`, `core`, `api`
+- `docs/` — architecture and workflow markdown files
+- `templates/` — Django templates per app
+- `static/` — CSS/JS/images
+- `requirements.txt` — Python dependencies
+
+## Installation (local development)
+
+1. Clone the repository
+
+```bash
+git clone <repo-url>
+cd OCR_APP
+```
+
+2. Create and activate a virtual environment
+
+```bash
+python -m venv .venv
+# Windows
+.venv\\Scripts\\activate
+# Unix / macOS
+source .venv/bin/activate
+```
+
+3. Install dependencies
+
+```bash
+pip install -r OCR/requirements.txt
+```
+
+4. Add environment variables
+
+Create a `.env` file in the project root with at least:
+
+```env
+SECRET_KEY=your-secret-key
+DEBUG=True
+DATABASE_URL=sqlite:///db.sqlite3
+# Optional
+EMAIL_HOST=smtp.example.com
+```
+
+5. Run migrations and start the server
+
+```bash
+python OCR/manage.py makemigrations
+python OCR/manage.py migrate
+python OCR/manage.py createsuperuser
+python OCR/manage.py runserver
+```
+
+6. Open `http://127.0.0.1:8000/`
+
+## Environment variables
+
+The project reads configuration from environment variables. Key variables:
+
+- `SECRET_KEY` — Django secret key
+- `DEBUG` — `True`/`False`
+- `DATABASE_URL` — database connection string
+
+Use `python-dotenv` or a process manager to load `.env` in development.
+
+## Development workflow
+
+- Follow `docs/DEVELOPMENT_WORKFLOW.md` for branch, PR, and testing guidelines.
+- Use `docs/SETUP_GUIDE.md` for environment setup and local services.
+
+## Future plans
+
+- Background task queue: Celery + Redis for async OCR and PDF operations
+- Improved OCR engine integrations (PaddleOCR GPU support)
+- REST API endpoints for programmatic access
+- CI pipelines and automated tests
+
+## Documentation
+
+All architecture decisions and feature documentation live in the `docs/` folder. Read `docs/PROJECT_OVERVIEW.md` and `docs/DJANGO_ARCHITECTURE.md` first.
+
+--
+
+If you need a tailored setup (Docker, cloud deployment, GPU support), I can add Dockerfiles and deployment scripts.
+
+---

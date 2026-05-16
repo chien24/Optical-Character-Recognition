@@ -1,0 +1,26 @@
+# Core
+Django==5.2.14
+djangorestframework==3.14.0
+
+# OCR engines (optional GPU builds may be required for paddlepaddle)
+pillow==9.5.0
+pytesseract==0.3.10
+# For PaddleOCR (optional, heavyweight):
+# paddlepaddle (choose correct wheel for your platform)
+# paddleocr
+
+# PDF processing
+PyMuPDF==1.22.5
+
+# File conversion / rendering
+WeasyPrint==58.0
+python-docx==0.8.11
+
+# Utilities
+python-dotenv==1.0.0
+celery==5.3.1
+redis==4.5.1
+
+# Optional / dev
+pytest==7.4.0
+black==24.1.0
