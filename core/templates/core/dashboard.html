@@ -1,0 +1,121 @@
+{% extends "components/layout.html" %}
+{% block title %}OCR Processing — OCR Platform{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>OCR Processing</h1>
+  <p>Upload images or PDFs to extract text with AI-powered OCR</p>
+</div>
+
+<div class="two-col">
+  <!-- LEFT: Upload + Recent Files -->
+  <div>
+    <div class="card" style="padding: 20px;">
+      <p style="font-size:14px;font-weight:600;margin-bottom:14px;">Upload Document</p>
+      <form method="post" enctype="multipart/form-data" action="/">
+        {% csrf_token %}
+        <input type="hidden" name="job_type" value="ocr" />
+        <div class="upload-box" id="ocr-upload-box">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+          <p>Drop your file here or click to browse</p>
+          <span>Supports PNG, JPG, JPEG, WEBP, PDF (Max 10MB)</span>
+          <div style="margin-top:16px;">
+            <input type="file" id="ocr-file-input" name="file" accept=".png,.jpg,.jpeg,.webp,.pdf" style="display:none;" />
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('ocr-file-input').click()">Select File</button>
+          </div>
+        </div>
+
+        <!-- Recent Files -->
+        <div style="margin-top:20px;">
+          <p class="section-title">Recent Files</p>
+          <div class="file-list">
+            {% for file in recent_files %}
+            <div class="file-list-item">
+              <div class="file-icon {% if file.mime_type == 'application/pdf' %}pdf{% else %}img{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+              </div>
+              <div class="file-info">
+                <div class="file-name">{{ file.original_name }}</div>
+                <div class="file-type">{{ file.mime_type|default:"File" }}</div>
+              </div>
+              <div class="file-time">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                {{ file.uploaded_at|timesince }} ago
+              </div>
+            </div>
+            {% empty %}
+            <div class="file-list-item">
+              <span class="text-muted">No recent files yet.</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- RIGHT: OCR Settings -->
+  <div>
+    <div class="card settings-panel">
+      <div class="settings-title">OCR Settings</div>
+
+      <div class="settings-group">
+        <label class="form-label" for="ocr-model">OCR Model</label>
+        <select class="form-select" id="ocr-model" name="ocr_model" form="ocr-form">
+          <option>PaddleOCR</option>
+          <option>Tesseract OCR</option>
+          <option>Custom Model</option>
+        </select>
+      </div>
+
+      <div class="settings-group">
+        <label class="form-label" for="ocr-lang">OCR Language</label>
+        <select class="form-select" id="ocr-lang" name="ocr_language" form="ocr-form">
+          <option>English</option>
+          <option>Vietnamese</option>
+          <option>Chinese</option>
+          <option>Japanese</option>
+          <option>Auto-detect</option>
+        </select>
+      </div>
+
+      <div class="settings-group">
+        <p class="form-label">Export Format</p>
+        <label class="form-check">
+          <input type="checkbox" name="export_md" checked form="ocr-form" />
+          <label>Markdown (.md)</label>
+        </label>
+        <label class="form-check">
+          <input type="checkbox" name="export_txt" form="ocr-form" />
+          <label>Plain Text (.txt)</label>
+        </label>
+        <label class="form-check">
+          <input type="checkbox" name="export_json" form="ocr-form" />
+          <label>JSON</label>
+        </label>
+        <label class="form-check">
+          <input type="checkbox" name="export_pdf" form="ocr-form" />
+          <label>Searchable PDF</label>
+        </label>
+      </div>
+
+      <button type="submit" form="ocr-form" class="btn btn-primary btn-full" id="start-ocr-btn" disabled>
+        Start OCR
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const fileInput = document.getElementById('ocr-file-input');
+const startBtn = document.getElementById('start-ocr-btn');
+if (fileInput && startBtn) {
+  fileInput.addEventListener('change', () => {
+    startBtn.disabled = !fileInput.files.length;
+  });
+}
+</script>
+{% endblock %}

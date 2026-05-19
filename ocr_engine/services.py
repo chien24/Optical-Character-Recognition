@@ -14,32 +14,30 @@ class OCREngineService:
 
     @staticmethod
     def run_ocr(job: Job) -> OCRResult:
-        engine_name = job.params.get("engine", "tesseract") if job.params else "tesseract"
+        # This project uses a single custom PyTorch OCR model (ResNetEncoder).
+        # Always use the CustomPytorchEngine; do not support multiple engines.
+        try:
+            from .services.engines.custom_pytorch_service import CustomPytorchEngine
 
-        # lazy import of engines to avoid heavy deps at module import time
-        if engine_name == "tesseract":
-            try:
-                from .services.engines.tesseract_service import TesseractEngine
-
-                engine = TesseractEngine()
-            except Exception:
-                logger.exception("Failed to load TesseractEngine; falling back to placeholder")
-                engine = None
-        else:
+            engine = CustomPytorchEngine()
+        except Exception:
+            logger.exception("Failed to load CustomPytorchEngine; ensure model and dependencies are available")
             engine = None
 
-        # Execute engine if available (placeholder behavior otherwise)
         if engine is not None and hasattr(engine, "run"):
-            # Real implementations should accept file paths, pages, options
-            result = engine.run(getattr(job.input_file.file, "path", ""), options=job.params)
+            image_path = getattr(job.input_file.file, "path", "")
+            result = engine.run(image_path, options=job.params)
             ocr_text = result.get("text", "")
             confidence = result.get("confidence")
             pages = result.get("pages")
+            metadata = result.get("metadata", {})
         else:
             ocr_text = ""
             confidence = None
             pages = 0
 
-        orr = OCRResult.objects.create(job=job, text=ocr_text, confidence=confidence, pages=pages, metadata={})
-        logger.info("Created OCRResult for job=%s engine=%s", job.id, engine_name)
+        orr = OCRResult.objects.create(
+            job=job, text=ocr_text, confidence=confidence, pages=pages, metadata=metadata if "metadata" in locals() else {}
+        )
+        logger.info("Created OCRResult for job=%s using CustomPytorchEngine", job.id)
         return orr

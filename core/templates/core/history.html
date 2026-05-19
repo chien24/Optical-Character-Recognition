@@ -1,0 +1,147 @@
+{% extends "components/layout.html" %}
+{% block title %}Processing History — OCR Platform{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>Processing History</h1>
+  <p>View and manage your OCR processing history</p>
+</div>
+
+<!-- Stat Cards -->
+<div class="grid-4" style="margin-bottom:20px;">
+  <div class="card stat-card">
+    <div class="stat-info">
+      <h3>Total Processed</h3>
+      <p>{{ stats.total|default:0 }}</p>
+    </div>
+    <div class="stat-icon" style="background:#eff6ff;color:#2563eb;">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+    </div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-info">
+      <h3>Completed</h3>
+      <p style="color:#16a34a;">{{ stats.completed|default:0 }}</p>
+    </div>
+    <div class="stat-icon" style="background:#dcfce7;color:#16a34a;">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    </div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-info">
+      <h3>Processing</h3>
+      <p style="color:#d97706;">{{ stats.processing|default:0 }}</p>
+    </div>
+    <div class="stat-icon" style="background:#fef3c7;color:#d97706;">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    </div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-info">
+      <h3>Failed</h3>
+      <p style="color:#dc2626;">{{ stats.failed|default:0 }}</p>
+    </div>
+    <div class="stat-icon" style="background:#fee2e2;color:#dc2626;">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card" style="padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+  <div class="topbar-search" style="max-width:400px;flex:1;">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+    <input type="text" placeholder="Search files..." id="history-search" />
+  </div>
+  <select class="form-select" style="width:140px;" id="filter-status">
+    <option value="">All Status</option>
+    <option value="completed">Completed</option>
+    <option value="processing">Processing</option>
+    <option value="failed">Failed</option>
+  </select>
+  <select class="form-select" style="width:130px;" id="filter-type">
+    <option value="">All Types</option>
+    <option value="ocr">OCR</option>
+    <option value="pdf_merge">PDF Merge</option>
+    <option value="translation">Translation</option>
+  </select>
+</div>
+
+<!-- History Table -->
+<div class="card p-0">
+  <div class="table-wrap">
+    <table id="history-table">
+      <thead>
+        <tr>
+          <th>Filename</th>
+          <th>Type</th>
+          <th>OCR Model</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Size</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="file-icon {% if job.input_file.mime_type == 'application/pdf' %}pdf{% else %}img{% endif %}" style="width:28px;height:28px;border-radius:6px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+              </div>
+              <span style="font-weight:500;">{{ job.input_file.original_name|default:"—" }}</span>
+            </div>
+          </td>
+          <td>{{ job.job_type|capfirst }}</td>
+          <td>{{ job.params.ocr_model|default:"PaddleOCR" }}</td>
+          <td>
+            <span class="badge-status badge-{{ job.status }}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+              {{ job.status|capfirst }}
+            </span>
+          </td>
+          <td style="color:var(--text-muted);">{{ job.created_at|date:"Y-m-d h:i A" }}</td>
+          <td style="color:var(--text-muted);">{{ job.input_file.size|filesizeformat|default:"—" }}</td>
+          <td>
+            <div style="display:flex;gap:4px;">
+              <a href="{% url 'processing:job_status' job.id %}" class="icon-btn" title="View">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+              </a>
+              {% if job.result_file %}
+              <a href="/files/download/{{ job.result_file.id }}/" class="icon-btn" title="Download">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+              </a>
+              {% endif %}
+              <form method="post" action="/processing/delete/{{ job.id }}/" style="display:inline;" onsubmit="return confirm('Delete this job?')">
+                {% csrf_token %}
+                <button type="submit" class="icon-btn danger" title="Delete">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No processing history yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const search = document.getElementById('history-search');
+if (search) {
+  search.addEventListener('input', () => {
+    const q = search.value.toLowerCase();
+    document.querySelectorAll('#history-table tbody tr').forEach(tr => {
+      tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+}
+</script>
+{% endblock %}

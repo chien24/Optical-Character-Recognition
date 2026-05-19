@@ -1,0 +1,25 @@
+{% extends "components/layout.html" %} {% block title %}Register - OCR_APP{%
+endblock %} {% block content %}
+<div class="col-md-6 offset-md-3">
+  <h2>Create an account</h2>
+  <form method="post" novalidate>
+    {% csrf_token %} {{ form.non_field_errors }}
+    <div class="mb-3">
+      {{ form.username.label_tag }} {{ form.username }} {{ form.username.errors
+      }}
+    </div>
+    <div class="mb-3">
+      {{ form.email.label_tag }} {{ form.email }} {{ form.email.errors }}
+    </div>
+    <div class="mb-3">
+      {{ form.password1.label_tag }} {{ form.password1 }} {{
+      form.password1.errors }}
+    </div>
+    <div class="mb-3">
+      {{ form.password2.label_tag }} {{ form.password2 }} {{
+      form.password2.errors }}
+    </div>
+    <button type="submit" class="btn btn-primary">Register</button>
+  </form>
+</div>
+{% endblock %}

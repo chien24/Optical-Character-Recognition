@@ -1,0 +1,28 @@
+{% extends "components/layout.html" %} {% block title %}Users - OCR_APP{%
+endblock %} {% block content %}
+<div class="col-12">
+  <h2>All Users</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Joined</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.username }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.date_joined }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="3">No users found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

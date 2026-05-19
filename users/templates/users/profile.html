@@ -1,0 +1,13 @@
+{% extends "components/layout.html" %} {% block title %}Profile - OCR_APP{%
+endblock %} {% block content %}
+<div class="col-md-8 offset-md-2">
+  <h2>Profile</h2>
+  <dl class="row">
+    <dt class="col-sm-3">Username</dt>
+    <dd class="col-sm-9">{{ user.username }}</dd>
+
+    <dt class="col-sm-3">Email</dt>
+    <dd class="col-sm-9">{{ user.email }}</dd>
+  </dl>
+</div>
+{% endblock %}

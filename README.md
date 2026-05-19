@@ -4,7 +4,7 @@ This repository contains a Django-based platform for document OCR, PDF processin
 
 Key capabilities
 
-- OCR images and PDFs using multiple engines (Tesseract, PaddleOCR)
+- OCR images and PDFs using the custom PyTorch model (ResNetEncoder)
 - Export OCR results to Markdown, TXT, JSON, or searchable PDF
 - PDF editing: merge, split, rotate, crop, watermark, add text/image
 - File conversion: DOCX/TXT/Markdown/Image → PDF
@@ -27,10 +27,10 @@ This README provides a high-level project overview and quick setup instructions.
 
 - Backend: Django
 - API: Django REST Framework (planned)
-- OCR: PaddleOCR, Tesseract (engine adapters in `ocr_engine`)
+- OCR: Custom PyTorch model (ResNetEncoder) loaded via `ocr_engine` service
 - PDF processing: PyMuPDF
 - File conversion: WeasyPrint, python-docx, LibreOffice (optional)
-- Frontend: Django templates, Tailwind-compatible static layout
+- Frontend: Django templates with Custom Vanilla CSS (Design System)
 
 ## Project Structure (high level)
 
@@ -55,7 +55,7 @@ cd OCR_APP
 ```bash
 python -m venv .venv
 # Windows
-.venv\\Scripts\\activate
+.venv\Scripts\activate
 # Unix / macOS
 source .venv/bin/activate
 ```
@@ -78,7 +78,16 @@ DATABASE_URL=sqlite:///db.sqlite3
 EMAIL_HOST=smtp.example.com
 ```
 
-5. Run migrations and start the server
+5. Setup OCR Model Checkpoints
+
+Place your trained PyTorch `.pth` and `vocab.txt` files inside the configured checkpoints directory before starting the server:
+
+```bash
+mkdir -p OCR/ocr_engine/services/engines/
+# Move your best_model.pth and vocab.txt into this directory
+```
+
+6. Run migrations and start the server
 
 ```bash
 python OCR/manage.py makemigrations

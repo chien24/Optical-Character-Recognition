@@ -1,4 +1,4 @@
 from .base_engine import BaseEngine
-from .tesseract_service import TesseractEngine
+from .custom_pytorch_service import CustomPytorchEngine
 
-__all__ = ["BaseEngine", "TesseractEngine"]
+__all__ = ["BaseEngine", "CustomPytorchEngine"]

@@ -1,0 +1,6 @@
+<div class="upload-box">
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %} {{ form.non_field_errors }} {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Upload</button>
+  </form>
+</div>

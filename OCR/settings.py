@@ -42,6 +42,9 @@ INSTALLED_APPS = [
     'users',
     'processing',
     'ocr_engine',
+    'converter',
+    'translator',
+    'pdf_tools',
 ]
 
 MIDDLEWARE = [
@@ -120,6 +123,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media files (user uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -132,3 +140,21 @@ AUTH_USER_MODEL = 'users.User'
 # Login settings
 LOGIN_URL = '/users/login/'
 LOGIN_REDIRECT_URL = '/'
+
+
+# OCR configuration (defaults can be overridden in environment-specific settings)
+# Checkpoints directory
+OCR_CHECKPOINT_DIR = BASE_DIR / 'ocr_engine' / 'services' / 'engines'
+# Default model and vocab paths (strings)
+OCR_MODEL_PATH = str(OCR_CHECKPOINT_DIR / 'best_model.pth')
+OCR_VOCAB_PATH = str(OCR_CHECKPOINT_DIR / 'vocab.txt')
+
+# Ollama correction defaults
+OLLAMA_URL = 'http://localhost:11434'
+OLLAMA_MODEL = 'qwen2.5:0.5b'
+
+# Device config: None => auto-detect (torch.cuda.is_available()), True => force GPU, False => force CPU
+OCR_USE_GPU = None
+
+# Enable/disable Ollama correction by default
+OCR_ENABLE_CORRECTION = False

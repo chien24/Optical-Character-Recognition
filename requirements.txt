@@ -4,7 +4,8 @@ djangorestframework==3.14.0
 
 # OCR engines (optional GPU builds may be required for paddlepaddle)
 pillow==9.5.0
-pytesseract==0.3.10
+numpy>=1.24.0
+opencv-python>=4.8.0
 # For PaddleOCR (optional, heavyweight):
 # paddlepaddle (choose correct wheel for your platform)
 # paddleocr
@@ -24,3 +25,17 @@ redis==4.5.1
 # Optional / dev
 pytest==7.4.0
 black==24.1.0
+
+# Paddle
+paddlepaddle==3.0.0
+paddleocr==3.0.3
+paddlex==3.0.3
+langchain==0.1.20
+huggingface-hub>=0.23.0
+
+torch>=1.13.0
+transformers==4.41.2
+tokenizers==0.19.1
+sentencepiece
+accelerate
+requests>=2.31.0
