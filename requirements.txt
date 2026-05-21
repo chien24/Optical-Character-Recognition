@@ -1,41 +1,39 @@
-# Core
+# ==============================================================================
+# OCR & PDF Processing Web Application - Requirements & Dependencies
+# ==============================================================================
+
+# --- Core Django Web Framework ---
 Django==5.2.14
 djangorestframework==3.14.0
 
-# OCR engines (optional GPU builds may be required for paddlepaddle)
-pillow==9.5.0
-numpy>=1.24.0
-opencv-python>=4.8.0
-# For PaddleOCR (optional, heavyweight):
-# paddlepaddle (choose correct wheel for your platform)
-# paddleocr
-
-# PDF processing
+# --- PDF & Document Processing ---
 PyMuPDF==1.22.5
-
-# File conversion / rendering
 WeasyPrint==58.0
 python-docx==0.8.11
 
-# Utilities
-python-dotenv==1.0.0
-celery==5.3.1
-redis==4.5.1
-
-# Optional / dev
-pytest==7.4.0
-black==24.1.0
-
-# Paddle
-paddlepaddle==3.0.0
-paddleocr==3.0.3
-paddlex==3.0.3
-langchain==0.1.20
-huggingface-hub>=0.23.0
-
+# --- Machine Learning & OCR (PyTorch Custom Model) ---
 torch>=1.13.0
+torchvision>=0.14.0
 transformers==4.41.2
 tokenizers==0.19.1
 sentencepiece
 accelerate
+huggingface-hub>=0.23.0
+
+
+# --- Image Processing & Mathematics ---
+pillow>=9.5.0
+numpy>=1.24.0
+opencv-python>=4.8.0
+
+# --- Utilities & API Clients ---
 requests>=2.31.0
+python-dotenv==1.0.0
+
+# --- Task Queue & Caching (Asynchronous Workers) ---
+celery==5.3.1
+redis==4.5.1
+
+# --- Development, Formatting & Testing ---
+pytest==7.4.0
+black==24.1.0
