@@ -29,7 +29,12 @@ from files.services import FileService
 from processing.models import Job
 from processing.services import ProcessingService
 from .models import OCRResult
-from .services.ocr_pipeline import run_ocr_pipeline
+from .services.document_ocr_service import (
+    run_document_ocr,
+    UnsupportedFileTypeError,
+    CorruptedFileError,
+    EmptyDocumentError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -82,27 +87,35 @@ def start_ocr(request):
     )
 
     # ── 3. Run OCR via service layer ──────────────────────────────────────
+    # run_document_ocr handles both image files and PDFs transparently.
+    # For PDFs it renders pages to PIL.Image internally (per-page, hybrid).
     job.status = "running"
     job.started_at = timezone.now()
     job.save(update_fields=["status", "started_at"])
 
     try:
-        image_path = saved_file.file.path
-        result = run_ocr_pipeline(image_path)
+        doc_path = saved_file.file.path
+        result = run_document_ocr(doc_path)
         ocr_text = result.get("corrected_text") or result.get("raw_text", "")
+        page_count = result.get("page_count", 1)
+        file_type = result.get("file_type", "image")
 
         # ── 4. Persist OCRResult ──────────────────────────────────────────
         OCRResult.objects.create(
             job=job,
             text=ocr_text,
             confidence=None,  # custom model doesn't expose per-token confidence
-            pages=1,
+            pages=page_count,
             metadata={
                 "raw_text": result.get("raw_text", ""),
                 "ocr_time": result.get("ocr_time"),
                 "correction_time": result.get("correction_time"),
                 "total_time": result.get("total_time"),
                 "engine": "CustomPytorchEngine (ResNetEncoder)",
+                "file_type": file_type,
+                "page_count": page_count,
+                # pages_detail enables future features: retry, preview, searchable PDF
+                "pages_detail": result.get("pages_detail", []),
             },
         )
 
@@ -128,8 +141,27 @@ def start_ocr(request):
         job.result_file = result_file
         job.save(update_fields=["status", "finished_at", "result_file"])
 
-        messages.success(request, "OCR completed successfully!")
+        success_msg = f"OCR completed successfully! ({page_count} page{'s' if page_count != 1 else ''})"
+        messages.success(request, success_msg)
         return redirect("ocr_engine:view_result", pk=job.pk)
+
+    except UnsupportedFileTypeError as exc:
+        logger.warning("Unsupported file type for job id=%s: %s", job.pk, exc)
+        job.status = "failed"
+        job.finished_at = timezone.now()
+        job.logs = str(exc)
+        job.save(update_fields=["status", "finished_at", "logs"])
+        messages.error(request, f"Unsupported file type: {exc}")
+        return redirect("core:dashboard")
+
+    except (CorruptedFileError, EmptyDocumentError) as exc:
+        logger.warning("Document error for job id=%s: %s", job.pk, exc)
+        job.status = "failed"
+        job.finished_at = timezone.now()
+        job.logs = str(exc)
+        job.save(update_fields=["status", "finished_at", "logs"])
+        messages.error(request, f"Document error: {exc}")
+        return redirect("core:dashboard")
 
     except Exception as exc:
         logger.exception("OCR pipeline failed for job id=%s", job.pk)
@@ -177,8 +209,13 @@ def upload_and_run_ocr(request):
     saved_name = default_storage.save(tmp_name, ContentFile(uploaded.read()))
     try:
         abs_path = default_storage.path(saved_name)
-        result = run_ocr_pipeline(abs_path)
+        # run_document_ocr handles both image and PDF uploads
+        result = run_document_ocr(abs_path)
         return JsonResponse(result)
+    except UnsupportedFileTypeError as exc:
+        return JsonResponse({"error": str(exc)}, status=415)
+    except (CorruptedFileError, EmptyDocumentError) as exc:
+        return JsonResponse({"error": str(exc)}, status=422)
     except Exception:
         logger.exception("Error running OCR on uploaded file")
         return JsonResponse({"error": "internal error"}, status=500)

@@ -4,6 +4,7 @@ pdf_tools/services package.
 Re-exports all public service functions for convenient imports:
 
     from pdf_tools.services import merge_pdfs, split_pdf, ...
+    from pdf_tools.services import iter_pdf_pages, render_page_to_pil, ...
 """
 
 from .merge_service import merge_pdfs
@@ -16,6 +17,14 @@ from .compress_service import compress_pdf
 from .watermark_service import add_text_watermark, add_image_watermark
 from .encrypt_service import encrypt_pdf, decrypt_pdf
 from .preview_service import generate_preview, generate_all_previews
+
+# PDF → PIL.Image rendering (used by OCR pipeline for PDF input support)
+from .pdf_render_service import (
+    iter_pdf_pages,
+    render_page_to_pil,
+    extract_page_text,
+    get_pdf_page_count,
+)
 
 __all__ = [
     # Merge
@@ -45,4 +54,9 @@ __all__ = [
     # Preview
     "generate_preview",
     "generate_all_previews",
+    # PDF render (for OCR pipeline)
+    "iter_pdf_pages",
+    "render_page_to_pil",
+    "extract_page_text",
+    "get_pdf_page_count",
 ]
