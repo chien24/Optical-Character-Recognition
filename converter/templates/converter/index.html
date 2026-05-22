@@ -4,7 +4,7 @@
 
 <div class="page-header">
   <h1>File Converter</h1>
-  <p>Convert documents and images to different formats</p>
+  <p>Convert documents and images between formats</p>
 </div>
 
 <!-- Popular Conversions -->
@@ -16,112 +16,95 @@
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
       <span>{{ conv.label }}</span>
     </div>
-    {% empty %}
-    <div class="conv-chip"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg><span>DOCX → PDF</span></div>
-    <div class="conv-chip"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg><span>TXT → PDF</span></div>
-    <div class="conv-chip"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg><span>Image → PDF</span></div>
-    <div class="conv-chip"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg><span>Markdown → PDF</span></div>
-    <div class="conv-chip"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg><span>HTML → PDF</span></div>
-    <div class="conv-chip"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg><span>Excel → PDF</span></div>
     {% endfor %}
-
   </div>
 </div>
+
+<!-- Form errors (non-field) -->
+{% if form.non_field_errors %}
+<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:14px 18px;margin-bottom:16px;color:#ef4444;font-size:13px;">
+  {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+</div>
+{% endif %}
 
 <!-- Upload + Output Format -->
 <div class="card" style="padding:0;overflow:hidden;">
   <form method="post" enctype="multipart/form-data" id="conv-form">
     {% csrf_token %}
     <div style="display:grid;grid-template-columns:1fr 1fr;">
+
       <!-- Left: Upload -->
       <div style="padding:24px;border-right:1px solid var(--border);">
         <p style="font-size:14px;font-weight:600;margin-bottom:14px;">Upload File</p>
-        <div class="upload-box">
+
+        <!-- Drop zone -->
+        <div class="upload-box" id="drop-zone" style="cursor:pointer;position:relative;{% if form.file.errors %}border-color:#ef4444;{% endif %}"
+             onclick="document.getElementById('conv-file').click()"
+             ondragover="event.preventDefault();this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="handleDrop(event)">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
-          <p>Choose file to convert</p>
-          <span>Supports DOCX, TXT, MD, Images, HTML</span>
-          <div style="margin-top:16px;">
-            <input type="file" id="conv-file" name="file" style="display:none;" />
-            <button type="button" class="btn btn-primary" onclick="document.getElementById('conv-file').click()">Browse Files</button>
-          </div>
+          <p id="drop-label">Choose or drop file to convert</p>
+          <span>PDF, DOCX, PNG, JPG, JPEG, BMP, WEBP, TIFF, MD</span>
+          <input type="file" id="conv-file" name="file" style="display:none;"
+                 accept=".pdf,.docx,.png,.jpg,.jpeg,.bmp,.webp,.tiff,.md" />
+        </div>
+
+        {% if form.file.errors %}
+        <div style="color:#ef4444;font-size:12px;margin-top:8px;">{{ form.file.errors|join:", " }}</div>
+        {% endif %}
+
+        <!-- Selected file indicator -->
+        <div id="file-info" style="display:none;margin-top:12px;padding:10px 14px;background:var(--surface-2);border-radius:8px;font-size:13px;display:flex;align-items:center;gap:10px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="flex-shrink:0;color:var(--accent)"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+          <span id="file-name" style="font-weight:500;word-break:break-all;"></span>
+          <span id="file-size" style="color:var(--text-secondary);margin-left:auto;flex-shrink:0;"></span>
         </div>
       </div>
 
-      <!-- Right: Output format list -->
+      <!-- Right: Output format -->
       <div style="padding:24px;">
         <p style="font-size:14px;font-weight:600;margin-bottom:14px;">Output Format</p>
         <div class="format-list">
-          <label class="format-item selected" id="fmt-pdf">
+          {% for val, label in form.target_format.field.choices %}
+          {% with ext=val %}
+          <label class="format-item {% if forloop.first %}selected{% endif %}" id="fmt-{{ ext }}" for="id_target_format_{{ forloop.counter0 }}">
             <div class="format-item-left">
-              <input type="radio" name="target_format" value="pdf" checked />
+              <input type="radio" name="target_format" id="id_target_format_{{ forloop.counter0 }}"
+                     value="{{ val }}"
+                     {% if forloop.first %}checked{% endif %}
+                     {% if form.target_format.value == val %}checked{% endif %} />
               <div class="format-item-info">
-                <div class="name">PDF Document</div>
-                <div class="ext">.pdf</div>
+                <div class="name">{{ label }}</div>
+                <div class="ext">.{{ val }}</div>
               </div>
             </div>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
           </label>
-          <label class="format-item" id="fmt-docx">
-            <div class="format-item-left">
-              <input type="radio" name="target_format" value="docx" />
-              <div class="format-item-info">
-                <div class="name">Microsoft Word</div>
-                <div class="ext">.docx</div>
-              </div>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
-          </label>
-          <label class="format-item" id="fmt-txt">
-            <div class="format-item-left">
-              <input type="radio" name="target_format" value="txt" />
-              <div class="format-item-info">
-                <div class="name">Plain Text</div>
-                <div class="ext">.txt</div>
-              </div>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
-          </label>
-          <label class="format-item" id="fmt-md">
-            <div class="format-item-left">
-              <input type="radio" name="target_format" value="md" />
-              <div class="format-item-info">
-                <div class="name">Markdown</div>
-                <div class="ext">.md</div>
-              </div>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
-          </label>
-          <label class="format-item" id="fmt-html">
-            <div class="format-item-left">
-              <input type="radio" name="target_format" value="html" />
-              <div class="format-item-info">
-                <div class="name">HTML</div>
-                <div class="ext">.html</div>
-              </div>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
-          </label>
-          <label class="format-item" id="fmt-jpg">
-            <div class="format-item-left">
-              <input type="radio" name="target_format" value="jpg" />
-              <div class="format-item-info">
-                <div class="name">JPEG Image</div>
-                <div class="ext">.jpg</div>
-              </div>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
-          </label>
+          {% endwith %}
+          {% endfor %}
         </div>
       </div>
     </div>
 
-    <!-- Convert Button full-width -->
+    <!-- Convert button -->
     <div style="padding:0 24px 20px;">
       <button type="submit" class="btn btn-primary btn-full" id="conv-btn" style="margin-top:16px;" disabled>
-        Convert to PDF →
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="margin-right:6px;vertical-align:-2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+        <span id="conv-btn-label">Select a file to convert</span>
       </button>
     </div>
   </form>
+</div>
+
+<!-- Supported pairs info -->
+<div class="card" style="padding:16px 20px;margin-top:16px;">
+  <p style="font-size:12px;color:var(--text-secondary);margin:0;">
+    <strong style="color:var(--text);">Supported conversions:</strong>
+    {% for src, tgt in supported_pairs %}
+      <span style="display:inline-block;background:var(--surface-2);border-radius:4px;padding:1px 7px;margin:2px;font-size:11px;">{{ src|upper }} → {{ tgt|upper }}</span>
+    {% endfor %}
+  </p>
 </div>
 
 {% endblock %}
@@ -129,16 +112,70 @@
 {% block scripts %}
 <script>
 const convFile = document.getElementById('conv-file');
-const convBtn = document.getElementById('conv-btn');
-const radios = document.querySelectorAll('input[name="target_format"]');
+const convBtn  = document.getElementById('conv-btn');
+const convBtnLabel = document.getElementById('conv-btn-label');
+const radios   = document.querySelectorAll('input[name="target_format"]');
+const fileInfo = document.getElementById('file-info');
+const fileName = document.getElementById('file-name');
+const fileSize = document.getElementById('file-size');
+const dropZone = document.getElementById('drop-zone');
+const dropLabel = document.getElementById('drop-label');
 
-function updateConvBtn() {
-  const fmt = document.querySelector('input[name="target_format"]:checked');
-  const label = fmt ? `Convert to ${fmt.value.toUpperCase()} →` : 'Convert →';
-  if (convBtn) { convBtn.textContent = label; convBtn.disabled = !convFile?.files?.length; }
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-if (convFile) convFile.addEventListener('change', updateConvBtn);
-radios.forEach(r => r.addEventListener('change', updateConvBtn));
+function updateUI() {
+  const fmt = document.querySelector('input[name="target_format"]:checked');
+  const hasFile = convFile?.files?.length > 0;
+
+  // Format items — highlight selected
+  document.querySelectorAll('.format-item').forEach(el => el.classList.remove('selected'));
+  if (fmt) fmt.closest('.format-item')?.classList.add('selected');
+
+  // Button state
+  if (hasFile && fmt) {
+    convBtn.disabled = false;
+    convBtnLabel.textContent = `Convert to ${fmt.value.toUpperCase()} →`;
+  } else {
+    convBtn.disabled = true;
+    convBtnLabel.textContent = 'Select a file to convert';
+  }
+
+  // File info row
+  if (hasFile) {
+    const f = convFile.files[0];
+    fileName.textContent = f.name;
+    fileSize.textContent = formatBytes(f.size);
+    fileInfo.style.display = 'flex';
+    dropLabel.textContent = 'File selected — click to change';
+  }
+}
+
+function selectConversion(src, tgt) {
+  // Select the matching radio button if it exists
+  const radio = document.querySelector(`input[name="target_format"][value="${tgt}"]`);
+  if (radio) { radio.checked = true; updateUI(); }
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const dt = event.dataTransfer;
+  if (dt?.files?.length) {
+    const transfer = new DataTransfer();
+    transfer.items.add(dt.files[0]);
+    convFile.files = transfer.files;
+    updateUI();
+  }
+}
+
+if (convFile) convFile.addEventListener('change', updateUI);
+radios.forEach(r => r.addEventListener('change', updateUI));
+
+// On page load with a previously selected format (after form error redirect)
+updateUI();
 </script>
 {% endblock %}

@@ -10,6 +10,8 @@ djangorestframework==3.14.0
 PyMuPDF==1.22.5
 WeasyPrint==58.0
 python-docx==0.8.11
+markdownify>=0.11.0
+markdown>=3.5.0
 
 # --- Machine Learning & OCR (PyTorch Custom Model) ---
 torch>=1.13.0

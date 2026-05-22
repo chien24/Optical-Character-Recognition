@@ -1,0 +1,205 @@
+{% extends "components/layout.html" %}
+{% block title %}OCR Result — OCR Platform{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>OCR Result</h1>
+  <p>Job #{{ job.pk }} &middot; {{ job.input_file.original_name }}</p>
+</div>
+
+<!-- Status + Meta Row -->
+<div class="grid-2" style="margin-bottom:20px;">
+
+  <!-- Status Card -->
+  <div class="card" style="padding:24px;">
+    <p class="section-title">Status</p>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      {% if job.status == 'success' %}
+        <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(22,163,74,.12);color:#16a34a;border:1px solid rgba(22,163,74,.3);border-radius:999px;padding:6px 16px;font-size:13px;font-weight:600;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+          Completed
+        </span>
+      {% elif job.status == 'failed' %}
+        <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(220,38,38,.12);color:#dc2626;border:1px solid rgba(220,38,38,.3);border-radius:999px;padding:6px 16px;font-size:13px;font-weight:600;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+          Failed
+        </span>
+      {% elif job.status == 'running' %}
+        <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(234,179,8,.12);color:#ca8a04;border:1px solid rgba(234,179,8,.3);border-radius:999px;padding:6px 16px;font-size:13px;font-weight:600;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+          Running
+        </span>
+      {% else %}
+        <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(148,163,184,.12);color:#64748b;border:1px solid rgba(148,163,184,.3);border-radius:999px;padding:6px 16px;font-size:13px;font-weight:600;">
+          Pending
+        </span>
+      {% endif %}
+      <span style="color:var(--text-muted);font-size:13px;">{{ job.created_at|date:"N j, Y · H:i" }}</span>
+    </div>
+
+    <!-- Timing info -->
+    {% if ocr_result and ocr_result.metadata %}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="background:var(--bg);border-radius:var(--radius);padding:12px 14px;">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">OCR Time</div>
+        <div style="font-size:20px;font-weight:700;color:var(--primary);">{{ ocr_result.metadata.ocr_time|floatformat:2 }}s</div>
+      </div>
+      <div style="background:var(--bg);border-radius:var(--radius);padding:12px 14px;">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Total Time</div>
+        <div style="font-size:20px;font-weight:700;color:var(--primary);">{{ ocr_result.metadata.total_time|floatformat:2 }}s</div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Details Card -->
+  <div class="card" style="padding:24px;">
+    <p class="section-title">Details</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;">
+        <span style="color:var(--text-muted);">Input File</span>
+        <span style="font-weight:500;max-width:200px;text-align:right;word-break:break-all;">{{ job.input_file.original_name }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;">
+        <span style="color:var(--text-muted);">File Size</span>
+        <span style="font-weight:500;">{{ job.input_file.size|filesizeformat }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;">
+        <span style="color:var(--text-muted);">OCR Engine</span>
+        <span style="font-weight:500;">{{ job.params.ocr_model|default:"Custom PyTorch" }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;">
+        <span style="color:var(--text-muted);">Language</span>
+        <span style="font-weight:500;">{{ job.params.ocr_language|default:"Auto-detect" }}</span>
+      </div>
+      {% if ocr_result %}
+      <div style="display:flex;justify-content:space-between;font-size:13px;">
+        <span style="color:var(--text-muted);">Characters</span>
+        <span style="font-weight:500;">{{ ocr_result.text|length }}</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Error block -->
+{% if job.status == 'failed' and job.logs %}
+<div style="background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;">
+  <p style="font-size:12px;font-weight:600;color:#dc2626;margin-bottom:8px;">Error Details</p>
+  <pre style="font-size:12px;color:var(--text-muted);white-space:pre-wrap;margin:0;font-family:ui-monospace,monospace;">{{ job.logs }}</pre>
+</div>
+{% endif %}
+
+<!-- OCR Text Output -->
+{% if ocr_result and ocr_result.text %}
+<div class="card" style="padding:0;overflow:hidden;margin-bottom:20px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--bg);">
+    <span style="font-size:13px;font-weight:600;">Extracted Text</span>
+    <div style="display:flex;gap:8px;">
+      <button id="copy-btn" class="btn btn-outline btn-sm" onclick="copyText()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184"/></svg>
+        Copy
+      </button>
+      {% if job.result_file %}
+      <a href="{{ job.result_file.file.url }}" download="{{ job.result_file.original_name }}" class="btn btn-primary btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+        Download {{ job.result_file.original_name|slice:"-3:" }}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Raw text vs corrected tabs -->
+  {% if ocr_result.metadata.raw_text and ocr_result.metadata.raw_text != ocr_result.text %}
+  <div style="display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--bg);">
+    <button class="tab-btn active" id="tab-corrected" onclick="switchTab('corrected')" style="padding:8px 18px;border:none;background:none;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid var(--primary);color:var(--primary);">Corrected</button>
+    <button class="tab-btn" id="tab-raw" onclick="switchTab('raw')" style="padding:8px 18px;border:none;background:none;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);">Raw OCR</button>
+  </div>
+  <div id="panel-corrected" style="padding:20px;">
+    <pre id="ocr-text-corrected" style="white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.7;font-family:inherit;margin:0;color:var(--text);">{{ ocr_result.text }}</pre>
+  </div>
+  <div id="panel-raw" style="padding:20px;display:none;">
+    <pre id="ocr-text-raw" style="white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.7;font-family:inherit;margin:0;color:var(--text-muted);">{{ ocr_result.metadata.raw_text }}</pre>
+  </div>
+  {% else %}
+  <div style="padding:20px;">
+    <pre id="ocr-text" style="white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.7;font-family:inherit;margin:0;color:var(--text);">{{ ocr_result.text }}</pre>
+  </div>
+  {% endif %}
+</div>
+{% elif job.status == 'success' %}
+<div class="card" style="padding:40px;text-align:center;color:var(--text-muted);margin-bottom:20px;">
+  <p>OCR completed but no text was extracted.</p>
+</div>
+{% endif %}
+
+<!-- Action Footer -->
+<div style="display:flex;gap:12px;flex-wrap:wrap;">
+  <a href="{% url 'core:dashboard' %}" class="btn btn-outline">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+    Process Another File
+  </a>
+  <a href="{% url 'core:history' %}" class="btn btn-outline">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    View History
+  </a>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let activeTab = 'corrected';
+
+function switchTab(tab) {
+  activeTab = tab;
+  const tabs = ['corrected', 'raw'];
+  tabs.forEach(t => {
+    const btn = document.getElementById('tab-' + t);
+    const panel = document.getElementById('panel-' + t);
+    if (!btn || !panel) return;
+    if (t === tab) {
+      btn.style.borderBottomColor = 'var(--primary)';
+      btn.style.color = 'var(--primary)';
+      panel.style.display = 'block';
+    } else {
+      btn.style.borderBottomColor = 'transparent';
+      btn.style.color = 'var(--text-muted)';
+      panel.style.display = 'none';
+    }
+  });
+}
+
+function copyText() {
+  let text = '';
+  const correctedEl = document.getElementById('ocr-text-corrected');
+  const rawEl = document.getElementById('ocr-text-raw');
+  const singleEl = document.getElementById('ocr-text');
+
+  if (singleEl) {
+    text = singleEl.textContent;
+  } else if (activeTab === 'corrected' && correctedEl) {
+    text = correctedEl.textContent;
+  } else if (rawEl) {
+    text = rawEl.textContent;
+  }
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    const orig = btn.innerHTML;
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg> Copied!`;
+    btn.style.color = 'var(--success)';
+    btn.style.borderColor = 'var(--success)';
+    setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+  }).catch(() => {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+</script>
+{% endblock %}

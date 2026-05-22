@@ -1,0 +1,75 @@
+{% extends "components/layout.html" %}
+{% block title %}Conversion Result — OCR Platform{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>Conversion Result</h1>
+  <p>Job #{{ job.pk }} · {{ job.source_format|upper }} → {{ job.target_format|upper }}</p>
+</div>
+
+<div class="card" style="padding:28px;">
+
+  <!-- Status badge -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+    {% if job.status == 'completed' %}
+      <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3);border-radius:999px;padding:4px 14px;font-size:13px;font-weight:600;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+        Completed
+      </span>
+    {% elif job.status == 'failed' %}
+      <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3);border-radius:999px;padding:4px 14px;font-size:13px;font-weight:600;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+        Failed
+      </span>
+    {% elif job.status == 'processing' %}
+      <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(234,179,8,.15);color:#eab308;border:1px solid rgba(234,179,8,.3);border-radius:999px;padding:4px 14px;font-size:13px;font-weight:600;">
+        Processing…
+      </span>
+    {% else %}
+      <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(148,163,184,.15);color:#94a3b8;border:1px solid rgba(148,163,184,.3);border-radius:999px;padding:4px 14px;font-size:13px;font-weight:600;">
+        Pending
+      </span>
+    {% endif %}
+    <span style="color:var(--text-secondary);font-size:13px;">{{ job.created_at|date:"N j, Y · H:i" }}</span>
+  </div>
+
+  <!-- File info -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+    <div style="background:var(--surface-2);border-radius:8px;padding:16px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);margin-bottom:6px;">Input File</div>
+      <div style="font-weight:600;word-break:break-all;">{{ job.input_file.original_name }}</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">{{ job.source_format|upper }}</div>
+    </div>
+    <div style="background:var(--surface-2);border-radius:8px;padding:16px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);margin-bottom:6px;">Output Format</div>
+      <div style="font-weight:600;">{{ job.target_format|upper }}</div>
+      {% if job.output_file %}
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">{{ job.output_file.original_name }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Error message -->
+  {% if job.status == 'failed' and job.error_message %}
+  <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:16px;margin-bottom:24px;">
+    <div style="font-size:12px;font-weight:600;color:#ef4444;margin-bottom:6px;">Error Details</div>
+    <pre style="font-size:12px;color:var(--text-secondary);white-space:pre-wrap;margin:0;">{{ job.error_message }}</pre>
+  </div>
+  {% endif %}
+
+  <!-- Actions -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    {% if job.status == 'completed' and job.output_file %}
+      <a href="{{ job.output_file.file.url }}" download="{{ job.output_file.original_name }}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="margin-right:6px;vertical-align:-2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+        Download {{ job.target_format|upper }}
+      </a>
+    {% endif %}
+    <a href="{% url 'converter:convert' %}" class="btn" style="background:var(--surface-2);color:var(--text);">
+      ← Convert Another File
+    </a>
+  </div>
+
+</div>
+
+{% endblock %}
