@@ -1,13 +1,275 @@
-{% extends "components/layout.html" %} {% block title %}Profile - OCR_APP{%
-endblock %} {% block content %}
-<div class="col-md-8 offset-md-2">
-  <h2>Profile</h2>
-  <dl class="row">
-    <dt class="col-sm-3">Username</dt>
-    <dd class="col-sm-9">{{ user.username }}</dd>
+{% extends "components/layout.html" %}
+{% block title %}My Profile — OCR Platform{% endblock %}
 
-    <dt class="col-sm-3">Email</dt>
-    <dd class="col-sm-9">{{ user.email }}</dd>
-  </dl>
+{% block head %}
+<style>
+  .profile-wrapper {
+    max-width: 680px;
+  }
+
+  /* Avatar section */
+  .profile-avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+
+  .profile-avatar-big {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+  }
+
+  .profile-avatar-info h2 {
+    font-size: 18px; font-weight: 700; margin-bottom: 4px;
+  }
+
+  .profile-avatar-info p {
+    font-size: 13px; color: var(--text-muted);
+  }
+
+  .profile-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 600;
+    margin-top: 8px;
+  }
+
+  .profile-badge.staff {
+    background: #fef3c7; color: #d97706;
+  }
+
+  .profile-badge.user {
+    background: var(--primary-light); color: var(--primary);
+  }
+
+  /* Info card */
+  .profile-info-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .profile-info-card-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .profile-info-card-header h3 {
+    font-size: 14px; font-weight: 600;
+  }
+
+  .profile-info-list {
+    padding: 8px 0;
+  }
+
+  .profile-info-row {
+    display: flex; align-items: center;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .profile-info-row:last-child {
+    border-bottom: none;
+  }
+
+  .profile-info-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-right: 14px;
+  }
+
+  .profile-info-icon svg {
+    width: 15px; height: 15px; color: var(--text-muted);
+  }
+
+  .profile-info-label {
+    font-size: 12px; color: var(--text-muted); margin-bottom: 2px;
+  }
+
+  .profile-info-value {
+    font-size: 13.5px; font-weight: 500; color: var(--text);
+  }
+
+  /* Quick actions */
+  .profile-actions {
+    display: flex; gap: 10px;
+  }
+
+  .profile-action-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: var(--radius);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: 1.5px solid transparent; transition: all .15s; font-family: inherit;
+  }
+
+  .profile-action-btn svg { width: 14px; height: 14px; }
+
+  .profile-action-btn.primary {
+    background: var(--primary); color: #fff; border-color: var(--primary);
+  }
+  .profile-action-btn.primary:hover { background: var(--primary-hover); }
+
+  .profile-action-btn.danger {
+    background: #fff; color: var(--danger); border-color: var(--danger);
+  }
+  .profile-action-btn.danger:hover { background: var(--danger-bg); }
+
+  .profile-action-btn.outline {
+    background: #fff; color: var(--text); border-color: var(--border);
+  }
+  .profile-action-btn.outline:hover { background: var(--bg); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>My Profile</h1>
+  <p>View and manage your account information</p>
+</div>
+
+<div class="profile-wrapper">
+
+  <!-- Avatar & Name Banner -->
+  <div class="profile-avatar-section">
+    <div class="profile-avatar-big">{{ user.get_username|first|upper }}</div>
+    <div class="profile-avatar-info">
+      <h2>{{ user.get_full_name|default:user.get_username }}</h2>
+      <p>{{ user.email }}</p>
+      {% if user.is_staff %}
+      <span class="profile-badge staff">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>
+        Staff
+      </span>
+      {% else %}
+      <span class="profile-badge user">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+        Member
+      </span>
+      {% endif %}
+    </div>
+    <div style="margin-left: auto; display: flex; gap: 8px;">
+      <a href="{% url 'users:logout' %}" class="profile-action-btn danger">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+        </svg>
+        Sign Out
+      </a>
+    </div>
+  </div>
+
+  <!-- Account Details -->
+  <div class="profile-info-card">
+    <div class="profile-info-card-header">
+      <h3>Account Details</h3>
+    </div>
+    <div class="profile-info-list">
+
+      <div class="profile-info-row">
+        <div class="profile-info-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+          </svg>
+        </div>
+        <div>
+          <div class="profile-info-label">Username</div>
+          <div class="profile-info-value">{{ user.username }}</div>
+        </div>
+      </div>
+
+      <div class="profile-info-row">
+        <div class="profile-info-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+          </svg>
+        </div>
+        <div>
+          <div class="profile-info-label">Email address</div>
+          <div class="profile-info-value">{{ user.email }}</div>
+        </div>
+      </div>
+
+      {% if user.get_full_name %}
+      <div class="profile-info-row">
+        <div class="profile-info-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12 11.204 3.045c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+          </svg>
+        </div>
+        <div>
+          <div class="profile-info-label">Full name</div>
+          <div class="profile-info-value">{{ user.get_full_name }}</div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="profile-info-row">
+        <div class="profile-info-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+          </svg>
+        </div>
+        <div>
+          <div class="profile-info-label">Member since</div>
+          <div class="profile-info-value">{{ user.date_joined|date:"F j, Y" }}</div>
+        </div>
+      </div>
+
+      <div class="profile-info-row">
+        <div class="profile-info-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+        </div>
+        <div>
+          <div class="profile-info-label">Last login</div>
+          <div class="profile-info-value">{{ user.last_login|date:"F j, Y, g:i A"|default:"—" }}</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Admin link -->
+  {% if user.is_staff %}
+  <div class="profile-info-card">
+    <div class="profile-info-card-header">
+      <h3>Admin</h3>
+    </div>
+    <div style="padding: 18px 24px; display: flex; gap: 10px;">
+      <a href="{% url 'users:admin_users' %}" class="profile-action-btn primary">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+        </svg>
+        Manage Users
+      </a>
+      <a href="/admin/" class="profile-action-btn outline">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 0 1 0 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+        </svg>
+        Django Admin
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
 </div>
 {% endblock %}

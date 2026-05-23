@@ -95,7 +95,13 @@ def start_ocr(request):
 
     try:
         doc_path = saved_file.file.path
-        result = run_document_ocr(doc_path)
+        # Way A: Enable advanced visual contrast, denoise and binarization filters by default
+        result = run_document_ocr(
+            doc_path,
+            enhance_contrast=True,
+            denoise=True,
+            binarize=True,
+        )
         ocr_text = result.get("corrected_text") or result.get("raw_text", "")
         page_count = result.get("page_count", 1)
         file_type = result.get("file_type", "image")
@@ -116,6 +122,9 @@ def start_ocr(request):
                 "page_count": page_count,
                 # pages_detail enables future features: retry, preview, searchable PDF
                 "pages_detail": result.get("pages_detail", []),
+                # Way A: Store the extracted expert features and line segmentation metrics
+                "expert_features": result.get("expert_features", []),
+                "line_count": result.get("line_count"),
             },
         )
 
@@ -209,8 +218,13 @@ def upload_and_run_ocr(request):
     saved_name = default_storage.save(tmp_name, ContentFile(uploaded.read()))
     try:
         abs_path = default_storage.path(saved_name)
-        # run_document_ocr handles both image and PDF uploads
-        result = run_document_ocr(abs_path)
+        # Way A: Enable advanced visual contrast, denoise and binarization filters by default
+        result = run_document_ocr(
+            abs_path,
+            enhance_contrast=True,
+            denoise=True,
+            binarize=True,
+        )
         return JsonResponse(result)
     except UnsupportedFileTypeError as exc:
         return JsonResponse({"error": str(exc)}, status=415)

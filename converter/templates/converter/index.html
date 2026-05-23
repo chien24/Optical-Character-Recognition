@@ -4,7 +4,7 @@
 
 <div class="page-header">
   <h1>File Converter</h1>
-  <p>Convert documents and images between formats</p>
+  <p>Convert documents between PDF, DOCX, Markdown, and plain text formats</p>
 </div>
 
 <!-- Popular Conversions -->
@@ -44,10 +44,10 @@
              ondragleave="this.classList.remove('drag-over')"
              ondrop="handleDrop(event)">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
-          <p id="drop-label">Choose or drop file to convert</p>
-          <span>PDF, DOCX, PNG, JPG, JPEG, BMP, WEBP, TIFF, MD</span>
+          <p id="drop-label">Choose or drop document to convert</p>
+          <span>PDF, DOCX, MD, TXT</span>
           <input type="file" id="conv-file" name="file" style="display:none;"
-                 accept=".pdf,.docx,.png,.jpg,.jpeg,.bmp,.webp,.tiff,.md" />
+                 accept=".pdf,.docx,.md,.txt" />
         </div>
 
         {% if form.file.errors %}

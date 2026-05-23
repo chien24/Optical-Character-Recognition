@@ -1,28 +1,276 @@
-{% extends "components/layout.html" %} {% block title %}Users - OCR_APP{%
-endblock %} {% block content %}
-<div class="col-12">
-  <h2>All Users</h2>
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Username</th>
-        <th>Email</th>
-        <th>Joined</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for u in users %}
-      <tr>
-        <td>{{ u.username }}</td>
-        <td>{{ u.email }}</td>
-        <td>{{ u.date_joined }}</td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="3">No users found.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{% extends "components/layout.html" %}
+{% block title %}User Management — OCR Platform{% endblock %}
+
+{% block head %}
+<style>
+  .admin-users-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .admin-users-stats {
+    display: flex;
+    gap: 16px;
+  }
+
+  .admin-stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 12.5px;
+    font-weight: 500;
+    border: 1.5px solid var(--border);
+    background: #fff;
+  }
+
+  .admin-stat-pill svg {
+    width: 14px;
+    height: 14px;
+    color: var(--primary);
+  }
+
+  /* Search bar */
+  .admin-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .admin-search-wrap {
+    position: relative;
+    flex: 1;
+    max-width: 320px;
+  }
+
+  .admin-search-wrap svg {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .admin-search-wrap input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+    color: var(--text);
+    background: #fff;
+    transition: border-color .15s;
+  }
+
+  .admin-search-wrap input:focus {
+    border-color: var(--primary);
+  }
+
+  /* Table overrides */
+  .users-table-wrap {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .users-table-wrap table {
+    font-size: 13px;
+  }
+
+  .users-table-wrap thead th {
+    background: var(--bg);
+    padding: 12px 18px;
+  }
+
+  .users-table-wrap tbody td {
+    padding: 14px 18px;
+  }
+
+  /* User avatar inline */
+  .user-row-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .user-mini-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), #6366f1);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .user-row-name { font-size: 13.5px; font-weight: 600; }
+  .user-row-email { font-size: 12px; color: var(--text-muted); }
+
+  /* Role badges */
+  .role-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 600;
+  }
+
+  .role-badge.staff {
+    background: #fef3c7; color: #d97706;
+  }
+
+  .role-badge.active {
+    background: var(--success-bg); color: var(--success);
+  }
+
+  .role-badge.inactive {
+    background: var(--danger-bg); color: var(--danger);
+  }
+
+  .role-badge.member {
+    background: var(--primary-light); color: var(--primary);
+  }
+
+  /* Empty state */
+  .table-empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-muted);
+  }
+
+  .table-empty svg {
+    width: 48px; height: 48px;
+    opacity: .3;
+    margin-bottom: 12px;
+  }
+
+  .table-empty p {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .table-empty span {
+    font-size: 12.5px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>User Management</h1>
+  <p>View and manage all registered accounts on the platform</p>
 </div>
+
+<!-- Stats & action row -->
+<div class="admin-users-header">
+  <div class="admin-users-stats">
+    <div class="admin-stat-pill">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+      </svg>
+      {{ users|length }} Total Users
+    </div>
+  </div>
+  <a href="/admin/users/user/add/" class="btn btn-primary">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+    </svg>
+    Add User
+  </a>
+</div>
+
+<!-- Search bar -->
+<div class="admin-search-bar">
+  <div class="admin-search-wrap">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+    </svg>
+    <input type="text" id="user-search" placeholder="Search by username or email…" />
+  </div>
+</div>
+
+<!-- Table -->
+<div class="users-table-wrap">
+  <div class="table-wrap">
+    <table id="users-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th>Last Login</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr class="user-tr" data-search="{{ u.username|lower }} {{ u.email|lower }}">
+          <td>
+            <div class="user-row-info">
+              <div class="user-mini-avatar">{{ u.get_username|first|upper }}</div>
+              <div>
+                <div class="user-row-name">{{ u.username }}</div>
+                <div class="user-row-email">{{ u.email|default:"—" }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            {% if u.is_staff %}
+            <span class="role-badge staff">Staff</span>
+            {% else %}
+            <span class="role-badge member">Member</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.is_active %}
+            <span class="role-badge active">Active</span>
+            {% else %}
+            <span class="role-badge inactive">Inactive</span>
+            {% endif %}
+          </td>
+          <td style="color: var(--text-muted); font-size: 12.5px;">{{ u.date_joined|date:"M j, Y" }}</td>
+          <td style="color: var(--text-muted); font-size: 12.5px;">{{ u.last_login|date:"M j, Y"|default:"Never" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5">
+            <div class="table-empty">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              </svg>
+              <p>No users found</p>
+              <span>Create user accounts via Django admin.</span>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const searchInput = document.getElementById('user-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase();
+      document.querySelectorAll('.user-tr').forEach(row => {
+        const haystack = row.dataset.search || '';
+        row.style.display = haystack.includes(q) ? '' : 'none';
+      });
+    });
+  }
+</script>
 {% endblock %}

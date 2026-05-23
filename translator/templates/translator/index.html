@@ -10,6 +10,12 @@
 <form method="post" id="translate-form">
   {% csrf_token %}
 
+  {% if translate_error %}
+  <div style="background:var(--danger-bg);border:1px solid #fecaca;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--danger);">
+    {{ translate_error }}
+  </div>
+  {% endif %}
+
   <!-- Language Bar -->
   <div class="translator-lang-bar">
     <div style="flex:1;">

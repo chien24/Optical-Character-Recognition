@@ -13,6 +13,7 @@ Boundary:
 """
 from __future__ import annotations
 
+import logging
 import warnings
 from typing import List, Tuple, Union
 
@@ -24,6 +25,8 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 
 from ..torch_models.ocr_model import IMG_HEIGHT, IMG_WIDTH
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -197,3 +200,146 @@ class ImagePreprocessor:
                 pil_img = src
             results.append(self.preprocess_pil(pil_img))
         return results
+
+
+# ---------------------------------------------------------------------------
+# Way C: Line Segmentation & Way A: Enhanced Hand-crafted Hybrid Features
+# ---------------------------------------------------------------------------
+
+def segment_lines(pil_img: Image.Image) -> List[Image.Image]:
+    """Segment a multi-line image into individual horizontal text lines.
+
+    Uses an inverse Otsu binarization and horizontal projection profile to detect
+    blank vertical spacing between text segments.
+    """
+    try:
+        # Convert to grayscale numpy array
+        img_gray = np.array(pil_img.convert("L"))
+        h, w = img_gray.shape
+        if h == 0 or w == 0:
+            return [pil_img]
+
+        # Binarize and invert (so text is 255 (white) and background is 0 (black))
+        _, thresh = cv2.threshold(img_gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+        # Horizontal projection profile (sum white pixels along each row)
+        row_sums = np.sum(thresh, axis=1)
+
+        # Smooth using moving average to avoid spurious peaks/noise in margins
+        window_size = 5
+        if len(row_sums) > window_size:
+            row_sums = np.convolve(row_sums, np.ones(window_size) / window_size, mode="same")
+
+        max_sum = np.max(row_sums)
+        # Background threshold: rows with sum <= 1% of the peak are blank gaps
+        line_threshold = max(5.0, max_sum * 0.01)
+        is_text = row_sums > line_threshold
+
+        lines = []
+        in_line = False
+        start_idx = 0
+
+        for i, val in enumerate(is_text):
+            if val and not in_line:
+                start_idx = i
+                in_line = True
+            elif not val and in_line:
+                end_idx = i
+                # Filter out lines that are too thin to be actual text (e.g. noise/ruled lines)
+                if end_idx - start_idx >= 8:
+                    lines.append((start_idx, end_idx))
+                in_line = False
+
+        if in_line:
+            end_idx = len(is_text)
+            if end_idx - start_idx >= 8:
+                lines.append((start_idx, end_idx))
+
+        if not lines:
+            return [pil_img]
+
+        # Crop original PIL Image horizontally for each line
+        cropped_lines = []
+        for start, end in lines:
+            # Add vertical padding for safety (stops ascenders/descenders from clipping)
+            pad = 4
+            y0 = max(0, start - pad)
+            y1 = min(h, end + pad)
+            line_crop = pil_img.crop((0, y0, w, y1))
+            cropped_lines.append(line_crop)
+
+        logger.info("Line Segmentation complete: detected %d text lines.", len(cropped_lines))
+        return cropped_lines
+
+    except Exception as exc:
+        logger.warning("Line Segmentation failed: %s. Falling back to full image.", exc)
+        return [pil_img]
+
+
+def extract_expert_features(pil_img: Image.Image) -> dict:
+    """Extract hybrid expert features from a line image inspired by para-hybrid.ipynb.
+
+    Calculates stroke density, crossings, and projection profiles.
+    """
+    try:
+        img_gray = np.array(pil_img.convert("L"))
+        h, w = img_gray.shape
+        if h == 0 or w == 0:
+            return {}
+
+        # Otsu binarization to separate ink from background
+        _, thresh = cv2.threshold(img_gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        ink = thresh / 255.0  # 1.0 = ink, 0.0 = background
+
+        # 1. Global Stroke Density (ink coverage fraction)
+        density = float(np.mean(ink))
+
+        # 2. Top-half vs Bottom-half stroke density (captures ascenders/descenders)
+        top_half = ink[:h // 2, :]
+        bot_half = ink[h // 2:, :]
+        top_density = float(np.mean(top_half)) if top_half.size > 0 else 0.0
+        bot_density = float(np.mean(bot_half)) if bot_half.size > 0 else 0.0
+        density_ratio = top_density / (bot_density + 1e-8)
+
+        # 3. Horizontal Crossing Count (approximate horizontal strokes)
+        h_cross = np.abs(ink[:, 1:] - ink[:, :-1])
+        h_crossings = float(np.mean(np.sum(h_cross, axis=0)))
+
+        # 4. Vertical Crossing Count (approximate vertical strokes)
+        v_cross = np.abs(ink[1:, :] - ink[:-1, :])
+        v_crossings = float(np.mean(np.sum(v_cross, axis=1)))
+
+        # 5. Row Variance (vertical ink spread)
+        row_variance = float(np.var(np.mean(ink, axis=1)))
+
+        # 6. Horizontal Projection profile statistics
+        h_proj = np.sum(ink, axis=1)
+        h_proj_mean = float(np.mean(h_proj))
+        h_proj_std = float(np.std(h_proj))
+
+        # 7. Vertical Projection profile statistics
+        v_proj = np.sum(ink, axis=0)
+        v_proj_mean = float(np.mean(v_proj))
+        v_proj_std = float(np.std(v_proj))
+
+        return {
+            "stroke_density": round(density, 4),
+            "top_density": round(top_density, 4),
+            "bottom_density": round(bot_density, 4),
+            "density_ratio": round(density_ratio, 4),
+            "horizontal_crossings": round(h_crossings, 4),
+            "vertical_crossings": round(v_crossings, 4),
+            "row_variance": round(row_variance, 6),
+            "horizontal_profile": {
+                "mean": round(h_proj_mean, 4),
+                "std": round(h_proj_std, 4),
+            },
+            "vertical_profile": {
+                "mean": round(v_proj_mean, 4),
+                "std": round(v_proj_std, 4),
+            }
+        }
+    except Exception as exc:
+        logger.warning("Failed to extract expert visual features: %s", exc)
+        return {}
+

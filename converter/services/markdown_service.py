@@ -157,5 +157,8 @@ class MarkdownToPdfConverter(BaseConverter):
 # Register
 # ---------------------------------------------------------------------------
 
-registry.register(MarkdownToTextConverter())
-registry.register(MarkdownToPdfConverter())
+try:
+    registry.register(MarkdownToTextConverter())
+except ValueError:
+    pass
+

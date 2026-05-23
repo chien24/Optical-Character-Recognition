@@ -32,10 +32,8 @@ from .registry import registry
 # ---------------------------------------------------------------------------
 # Force all service-module imports so they self-register their converters.
 # ---------------------------------------------------------------------------
-from . import docx_service  # noqa: F401
-from . import image_service  # noqa: F401
-from . import markdown_service  # noqa: F401
-from . import pdf_service  # noqa: F401
+from . import docx_service  # noqa: F401  registers all LibreOffice-based converters
+from . import pdf_service  # noqa: F401   registers pdf→txt, pdf→md
 
 logger = logging.getLogger(__name__)
 

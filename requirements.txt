@@ -18,8 +18,8 @@ torch>=1.13.0
 torchvision>=0.14.0
 transformers==4.41.2
 tokenizers==0.19.1
-sentencepiece
-accelerate
+sentencepiece>=0.2.1
+accelerate>=1.13.0
 huggingface-hub>=0.23.0
 
 
@@ -31,6 +31,7 @@ opencv-python>=4.8.0
 # --- Utilities & API Clients ---
 requests>=2.31.0
 python-dotenv==1.0.0
+google-cloud-translate>=3.15.0
 
 # --- Task Queue & Caching (Asynchronous Workers) ---
 celery==5.3.1

@@ -25,7 +25,7 @@ from typing import Dict, Optional
 from django.conf import settings
 from PIL import Image
 
-from .preprocess_service import ImagePreprocessor, load_image
+from .preprocess_service import ImagePreprocessor, load_image, segment_lines, extract_expert_features
 from .inference_service import extract_text_from_pil
 from .correction_service import correct_with_ollama
 
@@ -58,7 +58,7 @@ def run_ocr_on_pil_image(
 ) -> Dict[str, object]:
     """Run the full single-image OCR pipeline on a PIL.Image.
 
-    Pipeline: preprocess → inference → postprocess → (optional) LLM correction.
+    Pipeline: segment lines → preprocess → inference → postprocess → (optional) LLM correction.
 
     This is the **primary** single-image OCR entry point. It does not access
     the filesystem. For documents (PDF or any image file on disk), use
@@ -70,7 +70,7 @@ def run_ocr_on_pil_image(
         denoise:           Apply median-blur denoising before inference.
         binarize:          Apply Otsu binarization before inference.
         enable_correction: Override ``settings.OCR_ENABLE_CORRECTION``.
-                           Pass ``True`` / ``False`` to force; ``None`` reads settings.
+           Pass ``True`` / ``False`` to force; ``None`` reads settings.
         ollama_model:      Override ``settings.OLLAMA_MODEL`` for LLM correction.
 
     Returns:
@@ -80,8 +80,13 @@ def run_ocr_on_pil_image(
             ocr_time        (float) — seconds spent in model inference
             correction_time (float) — seconds spent in LLM correction (0.0 if disabled)
             total_time      (float) — total wall-clock seconds for this call
+            expert_features (list)  — hand-crafted hybrid features for each line segment
+            line_count      (int)   — number of line segments detected
     """
     total_start = time.perf_counter()
+
+    # 1. Way C: Segment the multi-line image into individual horizontal lines
+    lines = segment_lines(pil_img)
 
     preprocessor = ImagePreprocessor(
         enhance_contrast=enhance_contrast,
@@ -89,12 +94,30 @@ def run_ocr_on_pil_image(
         binarize=binarize,
     )
 
-    try:
-        raw_text, ocr_time = extract_text_from_pil(pil_img, preprocessor)
-    except Exception:
-        logger.exception("OCR inference failed on PIL image")
-        raise
+    line_texts = []
+    expert_features_list = []
+    total_ocr_time = 0.0
 
+    # 2. Run OCR & Expert feature extraction line-by-line
+    for i, line_crop in enumerate(lines, 1):
+        try:
+            line_text, ocr_time = extract_text_from_pil(line_crop, preprocessor)
+            line_texts.append(line_text)
+            total_ocr_time += ocr_time
+
+            # Way A: Extract hybrid expert features (Stroke Density, crossings, profiles)
+            feats = extract_expert_features(line_crop)
+            if feats:
+                feats["line_number"] = i
+                expert_features_list.append(feats)
+        except Exception:
+            logger.exception("OCR inference failed on line crop %d", i)
+            # If there's only 1 line, let it bubble up, else continue with other lines
+            if len(lines) == 1:
+                raise
+
+    # 3. Concatenate text of all line segments
+    raw_text = "\n".join(line_texts)
     raw_text = _postprocess_text(raw_text)
 
     corr_time = 0.0
@@ -117,9 +140,11 @@ def run_ocr_on_pil_image(
     return {
         "raw_text": raw_text,
         "corrected_text": corrected_text,
-        "ocr_time": float(ocr_time),
+        "ocr_time": float(total_ocr_time),
         "correction_time": float(corr_time),
         "total_time": float(total_time),
+        "expert_features": expert_features_list,
+        "line_count": len(lines),
     }
 
 

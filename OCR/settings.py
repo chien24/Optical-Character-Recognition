@@ -158,3 +158,17 @@ OCR_USE_GPU = None
 
 # Enable/disable Ollama correction by default
 OCR_ENABLE_CORRECTION = False
+
+# ---------------------------------------------------------------------------
+# Google Cloud Translation (translator app)
+# ---------------------------------------------------------------------------
+# Set your API key here or via GOOGLE_APPLICATION_CREDENTIALS env variable.
+# Get a key at: https://console.cloud.google.com/apis/credentials
+GOOGLE_TRANSLATE_API_KEY = ''   # e.g. 'AIza...'
+
+# ---------------------------------------------------------------------------
+# LibreOffice path (converter app — docx/txt/md conversions)
+# ---------------------------------------------------------------------------
+# Default: "soffice" (must be on PATH).
+# Windows example: r"C:\Program Files\LibreOffice\program\soffice.exe"
+LIBREOFFICE_PATH = 'soffice'

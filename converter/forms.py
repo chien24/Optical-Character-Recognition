@@ -10,14 +10,13 @@ from django import forms
 
 # Supported source-file extensions that the UI accepts.
 _ALLOWED_EXTENSIONS = {
-    "pdf", "docx",
-    "png", "jpg", "jpeg", "bmp", "webp", "tiff",
-    "md",
+    "pdf", "docx", "md", "txt",
 }
 
 # Choices shown to the user in the target-format dropdown.
 TARGET_FORMAT_CHOICES = [
     ("pdf",  "PDF Document (.pdf)"),
+    ("docx", "Word Document (.docx)"),
     ("txt",  "Plain Text (.txt)"),
     ("md",   "Markdown (.md)"),
 ]
@@ -29,7 +28,7 @@ class ConversionForm(forms.Form):
     file = forms.FileField(
         label="File to convert",
         help_text=(
-            "Supported input formats: PDF, DOCX, PNG, JPG, JPEG, BMP, WEBP, TIFF, MD."
+            "Supported input formats: PDF, DOCX, MD, TXT."
         ),
     )
     target_format = forms.ChoiceField(
