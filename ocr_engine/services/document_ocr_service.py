@@ -115,8 +115,6 @@ def _run_image_ocr(file_path: str, *, ocr_kwargs: Dict) -> Dict:
             "method": "ocr",
             "text": result.get("raw_text", ""),
             "ocr_time": result.get("ocr_time"),
-            "expert_features": result.get("expert_features", []),
-            "line_count": result.get("line_count", 1),
         }
     ]
 
@@ -129,8 +127,6 @@ def _run_image_ocr(file_path: str, *, ocr_kwargs: Dict) -> Dict:
         "page_count": 1,
         "file_type": "image",
         "pages_detail": pages_detail,
-        "expert_features": result.get("expert_features", []),
-        "line_count": result.get("line_count", 1),
     }
 
 
@@ -208,8 +204,6 @@ def _run_pdf_ocr(
 
                 page_entry["text"] = page_text
                 page_entry["ocr_time"] = page_ocr_time
-                page_entry["expert_features"] = ocr_result.get("expert_features", [])
-                page_entry["line_count"] = ocr_result.get("line_count", 1)
                 all_text_parts.append(page_text)
                 total_ocr_time += page_ocr_time
                 total_correction_time += page_corr_time

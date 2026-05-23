@@ -25,7 +25,7 @@ from typing import Dict, Optional
 from django.conf import settings
 from PIL import Image
 
-from .preprocess_service import ImagePreprocessor, load_image, segment_lines, extract_expert_features
+from .preprocess_service import ImagePreprocessor, load_image, segment_lines
 from .inference_service import extract_text_from_pil
 from .correction_service import correct_with_ollama
 
@@ -95,21 +95,14 @@ def run_ocr_on_pil_image(
     )
 
     line_texts = []
-    expert_features_list = []
     total_ocr_time = 0.0
 
-    # 2. Run OCR & Expert feature extraction line-by-line
+    # 2. Run OCR line-by-line
     for i, line_crop in enumerate(lines, 1):
         try:
             line_text, ocr_time = extract_text_from_pil(line_crop, preprocessor)
             line_texts.append(line_text)
             total_ocr_time += ocr_time
-
-            # Way A: Extract hybrid expert features (Stroke Density, crossings, profiles)
-            feats = extract_expert_features(line_crop)
-            if feats:
-                feats["line_number"] = i
-                expert_features_list.append(feats)
         except Exception:
             logger.exception("OCR inference failed on line crop %d", i)
             # If there's only 1 line, let it bubble up, else continue with other lines
@@ -143,8 +136,6 @@ def run_ocr_on_pil_image(
         "ocr_time": float(total_ocr_time),
         "correction_time": float(corr_time),
         "total_time": float(total_time),
-        "expert_features": expert_features_list,
-        "line_count": len(lines),
     }
 
 

@@ -122,9 +122,6 @@ def start_ocr(request):
                 "page_count": page_count,
                 # pages_detail enables future features: retry, preview, searchable PDF
                 "pages_detail": result.get("pages_detail", []),
-                # Way A: Store the extracted expert features and line segmentation metrics
-                "expert_features": result.get("expert_features", []),
-                "line_count": result.get("line_count"),
             },
         )
 
