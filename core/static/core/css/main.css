@@ -304,10 +304,22 @@ tbody tr:hover { background: var(--bg); }
 .format-item-info .ext { font-size: 12px; color: var(--text-muted); }
 
 /* ===== TRANSLATOR ===== */
+.translation-error {
+  background: var(--danger-bg);
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  color: var(--danger);
+  font-size: 13px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+}
+.translation-error[hidden] { display: none; }
+
 .translator-lang-bar {
   display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
   padding: 16px 20px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
 }
+.translator-lang-field { flex: 1; min-width: 0; }
 .translator-lang-bar .form-select { flex: 1; }
 .swap-btn { border: 1.5px solid var(--border); background: #fff; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all .15s; }
 .swap-btn:hover { background: var(--bg); }
@@ -320,10 +332,19 @@ tbody tr:hover { background: var(--bg); }
 .text-panel-header span { font-size: 13px; font-weight: 600; }
 .text-panel-actions { display: flex; gap: 4px; }
 .text-panel textarea { flex: 1; border: none; outline: none; padding: 16px; font-size: 13px; resize: none; font-family: inherit; min-height: 300px; color: var(--text); }
+.text-panel textarea[readonly] { background: #fafbfc; }
 .text-panel-footer { padding: 8px 14px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--text-muted); }
 .translation-placeholder { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 40px; color: var(--text-muted); }
 .translation-placeholder svg { width: 40px; height: 40px; opacity: .4; }
 .translation-placeholder span { font-size: 13px; }
+
+@media (max-width: 860px) {
+  .translator-lang-bar { align-items: flex-end; flex-wrap: wrap; }
+  .translator-lang-field { flex-basis: calc(50% - 28px); }
+  .translator-lang-bar .btn { flex-basis: 100%; }
+  .text-panels { grid-template-columns: 1fr; }
+  .text-panel + .text-panel { border-left: none; border-top: 1px solid var(--border); }
+}
 
 /* ===== PDF TOOLS GRID ===== */
 .pdf-tools-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }

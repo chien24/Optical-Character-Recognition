@@ -8,7 +8,7 @@ Key capabilities
 - Export OCR results to Markdown, TXT, JSON, or searchable PDF
 - PDF editing: merge, split, rotate, crop, watermark, add text/image
 - File conversion: DOCX/TXT/Markdown/Image → PDF
-- Translation pipeline (English ↔ Vietnamese) and export
+- Translation pipeline using Google Translate's free endpoint and export
 - User accounts and job management
 
 This README provides a high-level project overview and quick setup instructions. Detailed architecture and development workflows are under the `docs/` directory.
@@ -20,7 +20,7 @@ This README provides a high-level project overview and quick setup instructions.
 - OCR processing (images, PDFs) with export to Markdown
 - PDF processing tools (merge/split/rotate/crop/watermark)
 - File conversion and PDF generation
-- Text translation pipeline and export
+- Text translation pipeline with backend API, live frontend updates, and export
 - Basic user authentication and job orchestration
 
 ## Tech Stack
@@ -106,7 +106,55 @@ The project reads configuration from environment variables. Key variables:
 - `DEBUG` — `True`/`False`
 - `DATABASE_URL` — database connection string
 
+- `GOOGLE_TRANSLATE_FREE_URL` - optional override for the translator endpoint
+- `GOOGLE_TRANSLATE_TIMEOUT_SECONDS` - optional timeout for translation requests
+
 Use `python-dotenv` or a process manager to load `.env` in development.
+
+## Translation module
+
+The translator app is available at `/translator/`.
+
+- Backend service: `translator/services.py`
+- Page view and JSON API: `translator/views.py`
+- API endpoint: `POST /translator/api/translate/`
+- Frontend template: `translator/templates/translator/index.html`
+
+Translation now uses Google Translate's free public endpoint:
+
+```text
+https://translate.googleapis.com/translate_a/single
+```
+
+No Google Cloud API key or service account is required. The frontend sends text,
+source language, and target language to the Django backend with `fetch`; the
+backend calls Google Translate and returns JSON to update the translation panel.
+The original form POST flow is still kept as a fallback.
+
+Example JSON request:
+
+```json
+{
+  "source_text": "Hello",
+  "source_language": "en",
+  "target_language": "vi"
+}
+```
+
+Example JSON response:
+
+```json
+{
+  "ok": true,
+  "translated_text": "Xin chao",
+  "source_language": "en",
+  "target_language": "vi"
+}
+```
+
+Because this is a free public Google endpoint, it may be rate-limited by Google
+under heavier usage. For production-grade translation, replace the service layer
+with an official paid provider.
 
 ## Development workflow
 

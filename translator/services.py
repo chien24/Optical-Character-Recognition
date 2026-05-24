@@ -1,171 +1,188 @@
 """
-translator/services.py
+Translation service layer using Google Translate's public web endpoint.
 
-Translation service layer using Google Cloud Translation API v2.
-
-Follows the architecture boundary:
-  - translator/views.py calls translate_text() from this module
-  - This module handles provider setup, error handling, and caching
-  - No translation logic leaks into views.py
-
-Dependencies
-------------
-    pip install google-cloud-translate
-
-Configuration (settings.py)
-----------------------------
-    GOOGLE_TRANSLATE_API_KEY = "YOUR_API_KEY"   # recommended
-    # OR set GOOGLE_APPLICATION_CREDENTIALS env variable pointing to JSON key file
-
-Usage
------
-    from translator.services import translate_text
-    translated = translate_text("Hello world", target_language="vi")
+This implementation does not require an API key. It uses the same lightweight
+endpoint commonly used by the Google Translate web client, so it is suitable
+for local/demo use but can be rate-limited by Google.
 """
 
 from __future__ import annotations
 
+import html
 import logging
 from typing import Optional
 
+import requests
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
+GOOGLE_TRANSLATE_URL = "https://translate.googleapis.com/translate_a/single"
+MAX_CHARS_PER_REQUEST = 4500
+REQUEST_TIMEOUT_SECONDS = 10
+ERROR_PREFIX = "[Translation error]"
 
-# ---------------------------------------------------------------------------
-# Client singleton
-# ---------------------------------------------------------------------------
-
-_client = None
-
-
-def _get_client():
-    """Return a cached Google Cloud Translation v2 client.
-
-    Tries API key from settings first, then falls back to
-    Application Default Credentials (GOOGLE_APPLICATION_CREDENTIALS).
-    """
-    global _client
-    if _client is not None:
-        return _client
-
-    try:
-        from google.cloud import translate_v2 as translate  # type: ignore
-    except ImportError as exc:
-        raise RuntimeError(
-            "google-cloud-translate is not installed. "
-            "Install it with: pip install google-cloud-translate"
-        ) from exc
-
-    api_key: Optional[str] = getattr(settings, "GOOGLE_TRANSLATE_API_KEY", None)
-
-    if api_key:
-        # Use API key authentication (simplest for development)
-        import google.auth.credentials  # type: ignore
-        from google.oauth2 import service_account  # type: ignore — not always needed
-
-        # google-cloud-translate v2 with API key requires building the client manually
-        import googleapiclient.discovery  # type: ignore
-        # Fallback: use the translate_v2 client with api_key parameter if available
-        try:
-            _client = translate.Client(client_options={"api_key": api_key})
-        except TypeError:
-            # Older versions don't support client_options; set key via env
-            import os
-            os.environ.setdefault("GOOGLE_API_KEY", api_key)
-            _client = translate.Client()
-    else:
-        # Application Default Credentials
-        _client = translate.Client()
-
-    return _client
-
-
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
 
 def translate_text(
     text: str,
     target_language: str = "vi",
     source_language: Optional[str] = None,
 ) -> str:
-    """Translate *text* to *target_language* using Google Cloud Translation.
-
-    Args:
-        text:            The source text to translate.
-        target_language: BCP-47 language code for the output language,
-                         e.g. ``"vi"``, ``"en"``, ``"zh"``, ``"ja"``.
-        source_language: BCP-47 source language code.  When ``None`` (default)
-                         Google will auto-detect the source language.
-
-    Returns:
-        Translated text string on success.
-        An empty string if ``text`` is blank.
-        An error message string (prefixed with ``"[Translation error]"``) on failure.
-
-    Notes:
-        This function never raises — errors are logged and returned as a
-        human-readable message so the view can still render gracefully.
-    """
+    """Translate text with Google Translate's free public endpoint."""
     if not text or not text.strip():
         return ""
 
-    try:
-        client = _get_client()
-    except RuntimeError as exc:
-        logger.error("Translation client unavailable: %s", exc)
-        return f"[Translation error] {exc}"
+    source_language = _normalize_source_language(source_language)
+    target_language = _normalize_target_language(target_language)
+
+    if source_language == target_language:
+        return text
 
     try:
-        kwargs: dict = {"target_language": target_language}
-        if source_language and source_language != "auto":
-            kwargs["source_language"] = source_language
-
-        result = client.translate(text, **kwargs)
-        translated: str = result.get("translatedText", "")
-
-        # Google HTML-encodes some characters in the response; decode them
-        translated = _html_unescape(translated)
-        logger.info(
-            "Translated %d chars → %s (detected source: %s)",
-            len(text),
-            target_language,
-            result.get("detectedSourceLanguage", source_language or "auto"),
-        )
-        return translated
-
+        chunks = _chunk_text(text, MAX_CHARS_PER_REQUEST)
+        translated_chunks = [
+            _translate_chunk(chunk, target_language, source_language)
+            for chunk in chunks
+        ]
+        return "".join(translated_chunks)
     except Exception as exc:  # pylint: disable=broad-except
-        logger.error("Google Translate API error: %s", exc)
-        return f"[Translation error] {exc}"
+        logger.error("Google Translate free endpoint error: %s", exc)
+        return f"{ERROR_PREFIX} {exc}"
 
 
 def detect_language(text: str) -> Optional[str]:
-    """Detect the language of *text*.
-
-    Args:
-        text: The text to detect language for.
-
-    Returns:
-        BCP-47 language code (e.g. ``"en"``), or ``None`` on failure.
-    """
+    """Detect the source language using the free translation endpoint."""
     if not text or not text.strip():
         return None
+
     try:
-        client = _get_client()
-        result = client.detect_language(text)
-        return result.get("language")
+        data = _request_translation(text[:MAX_CHARS_PER_REQUEST], "en", "auto")
+        language = _extract_detected_language(data)
+        return language or None
     except Exception as exc:  # pylint: disable=broad-except
         logger.error("Language detection error: %s", exc)
         return None
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+def _translate_chunk(
+    text: str,
+    target_language: str,
+    source_language: str,
+) -> str:
+    data = _request_translation(text, target_language, source_language)
+    translated = _extract_translated_text(data)
+    if not translated and text.strip():
+        raise RuntimeError("Google Translate returned an empty response.")
+    return translated
 
-def _html_unescape(text: str) -> str:
-    """Unescape HTML entities that Google Translate may return."""
-    import html
-    return html.unescape(text)
+
+def _request_translation(
+    text: str,
+    target_language: str,
+    source_language: str,
+) -> list:
+    url = getattr(settings, "GOOGLE_TRANSLATE_FREE_URL", GOOGLE_TRANSLATE_URL)
+    timeout = getattr(
+        settings,
+        "GOOGLE_TRANSLATE_TIMEOUT_SECONDS",
+        REQUEST_TIMEOUT_SECONDS,
+    )
+    response = requests.get(
+        url,
+        params={
+            "client": "gtx",
+            "sl": source_language,
+            "tl": target_language,
+            "dt": "t",
+            "q": text,
+        },
+        headers={"User-Agent": "Mozilla/5.0"},
+        timeout=timeout,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def _extract_translated_text(data: list) -> str:
+    if not data or not isinstance(data[0], list):
+        return ""
+
+    translated_segments = []
+    for segment in data[0]:
+        if isinstance(segment, list) and segment:
+            translated_segments.append(segment[0] or "")
+
+    return html.unescape("".join(translated_segments))
+
+
+def _extract_detected_language(data: list) -> str:
+    if len(data) > 2 and isinstance(data[2], str):
+        return data[2]
+    return ""
+
+
+def _normalize_source_language(language: Optional[str]) -> str:
+    if not language:
+        return "auto"
+    language = language.strip().lower()
+    return language or "auto"
+
+
+def _normalize_target_language(language: Optional[str]) -> str:
+    if not language:
+        return "vi"
+    language = language.strip().lower()
+    return language or "vi"
+
+
+def _chunk_text(text: str, max_chars: int) -> list[str]:
+    if len(text) <= max_chars:
+        return [text]
+
+    chunks: list[str] = []
+    current = ""
+
+    for line in text.splitlines(keepends=True):
+        if len(line) > max_chars:
+            if current:
+                chunks.append(current)
+                current = ""
+            chunks.extend(_split_long_line(line, max_chars))
+            continue
+
+        if len(current) + len(line) > max_chars:
+            chunks.append(current)
+            current = line
+        else:
+            current += line
+
+    if current:
+        chunks.append(current)
+
+    return chunks
+
+
+def _split_long_line(line: str, max_chars: int) -> list[str]:
+    chunks: list[str] = []
+    current = ""
+
+    for word in line.split(" "):
+        separator = " " if current else ""
+        candidate = f"{current}{separator}{word}"
+        if len(candidate) <= max_chars:
+            current = candidate
+            continue
+
+        if current:
+            chunks.append(current)
+            current = ""
+
+        while len(word) > max_chars:
+            chunks.append(word[:max_chars])
+            word = word[max_chars:]
+        current = word
+
+    if current:
+        chunks.append(current)
+
+    return chunks

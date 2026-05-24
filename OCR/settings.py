@@ -160,11 +160,10 @@ OCR_USE_GPU = None
 OCR_ENABLE_CORRECTION = False
 
 # ---------------------------------------------------------------------------
-# Google Cloud Translation (translator app)
+# Google Translate free endpoint (translator app)
 # ---------------------------------------------------------------------------
-# Set your API key here or via GOOGLE_APPLICATION_CREDENTIALS env variable.
-# Get a key at: https://console.cloud.google.com/apis/credentials
-GOOGLE_TRANSLATE_API_KEY = ''   # e.g. 'AIza...'
+GOOGLE_TRANSLATE_FREE_URL = 'https://translate.googleapis.com/translate_a/single'
+GOOGLE_TRANSLATE_TIMEOUT_SECONDS = 10
 
 # ---------------------------------------------------------------------------
 # LibreOffice path (converter app — docx/txt/md conversions)
