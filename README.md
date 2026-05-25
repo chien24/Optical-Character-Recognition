@@ -1,176 +1,300 @@
 # OCR & PDF Processing Platform
 
-This repository contains a Django-based platform for document OCR, PDF processing, file conversion, and translation workflows.
+Nền tảng web xây dựng bằng Django để nhận dạng văn bản từ ảnh/PDF, thao tác
+tài liệu PDF, chuyển đổi định dạng và dịch văn bản trong một giao diện thống
+nhất.
 
-Key capabilities
+## Tổng Quan
 
-- OCR images and PDFs using the custom PyTorch model (ResNetEncoder)
-- Export OCR results to Markdown, TXT, JSON, or searchable PDF
-- PDF editing: merge, split, rotate, crop, watermark, add text/image
-- File conversion: DOCX/TXT/Markdown/Image → PDF
-- Translation pipeline using Google Translate's free endpoint and export
-- User accounts and job management
+Dự án tập trung vào quy trình xử lý tài liệu đầu-cuối:
 
-This README provides a high-level project overview and quick setup instructions. Detailed architecture and development workflows are under the `docs/` directory.
+- Tải lên ảnh hoặc PDF và trích xuất nội dung bằng OCR.
+- Tận dụng lớp text có sẵn trong PDF; chỉ OCR các trang scan.
+- Lưu lịch sử tác vụ, kết quả xử lý và tệp xuất ra.
+- Cung cấp công cụ PDF, chuyển đổi tài liệu và dịch văn bản trên web.
 
---
+Ứng dụng sử dụng SQLite và lưu tệp người dùng trong thư mục `media/` khi chạy
+cục bộ.
 
-## Main Features
+## Tính Năng
 
-- OCR processing (images, PDFs) with export to Markdown
-- PDF processing tools (merge/split/rotate/crop/watermark)
-- File conversion and PDF generation
-- Text translation pipeline with backend API, live frontend updates, and export
-- Basic user authentication and job orchestration
+| Nhóm | Khả năng hiện có |
+| --- | --- |
+| OCR | Nhận dạng ảnh và PDF; lựa chọn Custom PyTorch hoặc PaddleOCR/VietOCR; xuất kết quả Markdown hoặc TXT |
+| PDF tools | Merge, split, extract text/image/metadata, reorder, delete pages, rotate, compress, watermark, encrypt và preview |
+| Converter | Chuyển đổi giữa PDF, DOCX, TXT và Markdown theo các cặp định dạng được hỗ trợ |
+| Translator | Dịch văn bản qua giao diện web hoặc JSON API, sử dụng Google Translate public endpoint |
+| Tài khoản & tác vụ | Đăng ký, đăng nhập, hồ sơ, lưu file tải lên và theo dõi lịch sử OCR |
 
-## Tech Stack
+### Chuyển Đổi Định Dạng
 
-- Backend: Django
-- API: Django REST Framework (planned)
-- OCR: Custom PyTorch model (ResNetEncoder) loaded via `ocr_engine` service
-- PDF processing: PyMuPDF
-- File conversion: WeasyPrint, python-docx, LibreOffice (optional)
-- Frontend: Django templates with Custom Vanilla CSS (Design System)
+Các cặp chuyển đổi được đăng ký trong service hiện tại:
 
-## Project Structure (high level)
+| Đầu vào | Đầu ra hỗ trợ |
+| --- | --- |
+| PDF | DOCX, TXT, Markdown |
+| DOCX | PDF, TXT, Markdown |
+| TXT | PDF, DOCX, Markdown |
+| Markdown | PDF, DOCX |
 
-- `OCR/` — Django project configuration (settings, urls)
-- `apps/` / top-level apps: `files`, `ocr_engine`, `processing`, `pdf_tools`, `converter`, `translator`, `users`, `core`, `api`
-- `docs/` — architecture and workflow markdown files
-- `templates/` — Django templates per app
-- `static/` — CSS/JS/images
-- `requirements.txt` — Python dependencies
+## Công Nghệ
 
-## Installation (local development)
+| Thành phần | Công nghệ |
+| --- | --- |
+| Backend | Python, Django 5, Django REST Framework |
+| Giao diện | Django Templates, CSS, JavaScript thuần |
+| OCR tùy chỉnh | PyTorch, TorchVision |
+| OCR tài liệu | PaddlePaddle, PaddleOCR; VietOCR khi được cài đặt |
+| Xử lý PDF | PyMuPDF (`fitz`) |
+| Chuyển đổi tài liệu | `python-docx`, WeasyPrint, LibreOffice |
+| Dịch văn bản | Google Translate public endpoint qua `requests` |
+| Lưu trữ phát triển | SQLite, Django media storage |
 
-1. Clone the repository
-
-```bash
-git clone <repo-url>
-cd OCR_APP
-```
-
-2. Create and activate a Conda environment
-
-```bash
-conda create -n ocr python=3.10
-conda activate ocr
-```
-
-3. Install dependencies
-
-```bash
-pip install -r OCR/requirements.txt
-```
-
-4. Add environment variables
-
-Create a `.env` file in the project root with at least:
-
-```env
-SECRET_KEY=your-secret-key
-DEBUG=True
-DATABASE_URL=sqlite:///db.sqlite3
-# Optional
-EMAIL_HOST=smtp.example.com
-```
-
-5. Setup OCR Model Checkpoints
-
-Place your trained PyTorch `.pth` and `vocab.txt` files inside the configured checkpoints directory before starting the server:
-
-```bash
-mkdir -p OCR/ocr_engine/services/engines/
-# Move your best_model.pth and vocab.txt into this directory
-```
-
-6. Run migrations and start the server
-
-```bash
-python OCR/manage.py makemigrations
-python OCR/manage.py migrate
-python OCR/manage.py createsuperuser
-python OCR/manage.py runserver
-```
-
-7. Open `http://127.0.0.1:8000/`
-
-## Environment variables
-
-The project reads configuration from environment variables. Key variables:
-
-- `SECRET_KEY` — Django secret key
-- `DEBUG` — `True`/`False`
-- `DATABASE_URL` — database connection string
-
-- `GOOGLE_TRANSLATE_FREE_URL` - optional override for the translator endpoint
-- `GOOGLE_TRANSLATE_TIMEOUT_SECONDS` - optional timeout for translation requests
-
-Use `python-dotenv` or a process manager to load `.env` in development.
-
-## Translation module
-
-The translator app is available at `/translator/`.
-
-- Backend service: `translator/services.py`
-- Page view and JSON API: `translator/views.py`
-- API endpoint: `POST /translator/api/translate/`
-- Frontend template: `translator/templates/translator/index.html`
-
-Translation now uses Google Translate's free public endpoint:
+## Kiến Trúc Thư Mục
 
 ```text
-https://translate.googleapis.com/translate_a/single
+.
+|-- OCR/                 # Cấu hình Django project, URLs, WSGI/ASGI
+|-- core/                # Dashboard, history, layout và static assets
+|-- files/               # Quản lý tệp tải lên
+|-- processing/          # Job và trạng thái xử lý
+|-- ocr_engine/          # OCR pipeline, models, engine adapters và kết quả
+|-- pdf_tools/           # Công cụ PDF và service xử lý
+|-- converter/           # Registry và service chuyển đổi định dạng
+|-- translator/          # Dịch văn bản và API
+|-- users/               # Xác thực và hồ sơ người dùng
+|-- media/               # Tệp runtime, không đưa vào Git
+|-- manage.py
+`-- requirements.txt
 ```
 
-No Google Cloud API key or service account is required. The frontend sends text,
-source language, and target language to the Django backend with `fetch`; the
-backend calls Google Translate and returns JSON to update the translation panel.
-The original form POST flow is still kept as a fallback.
+## Yêu Cầu Hệ Thống
 
-Example JSON request:
+- Python 3.10 được khuyến nghị.
+- `pip` và môi trường ảo Python.
+- Kết nối internet cho chức năng dịch và lần tải model PaddleOCR đầu tiên.
+- LibreOffice trên `PATH` nếu sử dụng các chuyển đổi cần LibreOffice.
+- Ollama là tùy chọn, chỉ cần khi bật hậu xử lý sửa văn bản OCR.
 
-```json
-{
-  "source_text": "Hello",
-  "source_language": "en",
-  "target_language": "vi"
-}
+## Cài Đặt Nhanh
+
+### 1. Tạo môi trường ảo
+
+```powershell
+git clone <repository-url>
+cd Optical-Character-Recognition
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
-Example JSON response:
+Trên macOS/Linux, kích hoạt môi trường bằng:
 
-```json
-{
-  "ok": true,
-  "translated_text": "Xin chao",
-  "source_language": "en",
-  "target_language": "vi"
-}
+```bash
+source .venv/bin/activate
 ```
 
-Because this is a free public Google endpoint, it may be rate-limited by Google
-under heavier usage. For production-grade translation, replace the service layer
-with an official paid provider.
+### 2. Cài dependency
 
-## Development workflow
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-- Follow `docs/DEVELOPMENT_WORKFLOW.md` for branch, PR, and testing guidelines.
-- Use `docs/SETUP_GUIDE.md` for environment setup and local services.
+### 3. Khởi tạo cơ sở dữ liệu
 
-## Future plans
+```bash
+python manage.py migrate
+python manage.py createsuperuser
+```
 
-- Background task queue: Celery + Redis for async OCR and PDF operations
-- Improved OCR engine integrations (PaddleOCR GPU support)
-- REST API endpoints for programmatic access
-- CI pipelines and automated tests
+Lệnh tạo superuser là tùy chọn nhưng hữu ích để truy cập Django Admin.
 
-## Documentation
+### 4. Chạy ứng dụng
 
-All architecture decisions and feature documentation live in the `docs/` folder. Read `docs/PROJECT_OVERVIEW.md` and `docs/DJANGO_ARCHITECTURE.md` first.
+```bash
+python manage.py runserver
+```
 
---
+Truy cập:
 
-If you need a tailored setup (Docker, cloud deployment, GPU support), I can add Dockerfiles and deployment scripts.
+- Dashboard: <http://127.0.0.1:8000/>
+- Django Admin: <http://127.0.0.1:8000/admin/>
 
----
+## Cấu Hình OCR
+
+### Custom PyTorch
+
+Engine tùy chỉnh yêu cầu checkpoint và vocabulary:
+
+```text
+ocr_engine/services/engines/best_model.pth
+ocr_engine/services/engines/vocab.txt
+```
+
+Đường dẫn được cấu hình trong `OCR/settings.py`:
+
+```python
+OCR_MODEL_PATH = str(OCR_CHECKPOINT_DIR / 'best_model.pth')
+OCR_VOCAB_PATH = str(OCR_CHECKPOINT_DIR / 'vocab.txt')
+OCR_USE_GPU = None
+```
+
+Các tệp trọng số thường có dung lượng lớn và không nên commit vào repository.
+
+### PaddleOCR / VietOCR
+
+PaddleOCR phù hợp cho tài liệu tiếng Việt và có thể tải model trong lần chạy
+đầu. Nếu VietOCR có sẵn trong môi trường, adapter có thể dùng recognizer này
+trên các vùng chữ được PaddleOCR phát hiện; nếu không, PaddleOCR vẫn thực hiện
+nhận dạng tích hợp.
+
+```bash
+pip install -r requirements.txt
+# Tùy chọn khi cần recognizer VietOCR:
+pip install vietocr
+```
+
+Khi triển khai trên môi trường không có internet, cần chuẩn bị model cache
+trước khi khởi chạy OCR.
+
+### PDF Hybrid OCR
+
+Đối với PDF, service xử lý từng trang:
+
+1. Trang có lớp text đủ nội dung được trích xuất trực tiếp.
+2. Trang scan hoặc thiếu text được render thành ảnh rồi đưa qua OCR engine.
+
+Có thể cấu hình thêm trong `OCR/settings.py`:
+
+```python
+OCR_PDF_RENDER_DPI = 300
+OCR_PDF_TEXT_THRESHOLD = 20
+```
+
+## Cấu Hình Ứng Dụng
+
+Cấu hình phát triển hiện được đặt trong `OCR/settings.py`.
+
+| Setting | Mục đích |
+| --- | --- |
+| `OCR_USE_GPU` | Tự động/chủ động lựa chọn GPU cho OCR |
+| `OCR_ENABLE_CORRECTION` | Bật hậu xử lý văn bản OCR bằng Ollama |
+| `OLLAMA_URL`, `OLLAMA_MODEL` | Endpoint và model Ollama |
+| `GOOGLE_TRANSLATE_FREE_URL` | Endpoint dịch văn bản |
+| `GOOGLE_TRANSLATE_TIMEOUT_SECONDS` | Timeout khi gọi dịch vụ dịch |
+| `LIBREOFFICE_PATH` | Đường dẫn executable `soffice` |
+
+Trước khi triển khai production, cần chuyển `SECRET_KEY`, `DEBUG`,
+`ALLOWED_HOSTS` và các thông tin nhạy cảm sang cấu hình theo môi trường.
+
+## Các URL Chính
+
+| Chức năng | URL | Phương thức |
+| --- | --- | --- |
+| Dashboard OCR | `/` | GET |
+| Chạy OCR từ giao diện | `/ocr/run/` | POST |
+| Kết quả OCR | `/ocr/<id>/` | GET |
+| OCR upload API | `/ocr/api/upload/` | POST |
+| PDF tools | `/pdf-tools/` | GET |
+| Converter | `/converter/` | GET, POST |
+| Translator | `/translator/` | GET, POST |
+| Translator API | `/translator/api/translate/` | POST |
+| Lịch sử xử lý | `/history/` | GET |
+| Tài khoản | `/users/login/`, `/users/register/`, `/users/profile/` | GET, POST |
+
+Ví dụ gọi Translator API:
+
+```bash
+curl -X POST http://127.0.0.1:8000/translator/api/translate/ \
+  -H "Content-Type: application/json" \
+  -d '{"source_text":"Hello","source_language":"en","target_language":"vi"}'
+```
+
+## Kiểm Thử
+
+Chạy kiểm tra cấu hình Django và test suite:
+
+```bash
+python manage.py check
+python manage.py test
+```
+
+Test riêng cho converter có thể chạy bằng:
+
+```bash
+pytest converter/tests -q
+```
+
+## Xử Lý Sự Cố
+
+### `PaddleOCR/VietOCR engine is not available`
+
+1. Xác nhận đang dùng đúng virtual environment.
+2. Cài dependency bằng `pip install -r requirements.txt`.
+3. Kiểm tra import:
+
+```bash
+python -c "import paddle; from paddleocr import PaddleOCR; print('PaddleOCR ready')"
+```
+
+4. Bảo đảm máy có mạng trong lần chạy đầu để tải model.
+5. Nếu chọn pipeline có VietOCR, cài thêm `pip install vietocr`.
+
+### Custom PyTorch không load model
+
+Kiểm tra `best_model.pth` và `vocab.txt` đã tồn tại đúng tại thư mục engine,
+đồng thời khớp với `OCR_MODEL_PATH` và `OCR_VOCAB_PATH`.
+
+### Chuyển đổi DOCX/PDF thất bại
+
+Cài LibreOffice và bảo đảm lệnh `soffice` có thể chạy, hoặc đặt
+`LIBREOFFICE_PATH` tới executable tương ứng trong `OCR/settings.py`.
+
+### Translator trả lỗi kết nối
+
+Translator gọi một public endpoint của Google và có thể bị giới hạn lưu lượng
+hoặc gián đoạn. Với môi trường production, nên thay thế service bằng provider
+có SLA và thông tin xác thực phù hợp.
+
+## Ghi Chú Triển Khai
+
+- Đây là cấu hình phát triển; SQLite và Django development server không dành
+  cho production.
+- Tệp tải lên, tệp kết quả và model cache cần được quản lý bằng storage phù
+  hợp khi triển khai thật.
+- Celery và Redis đã có trong dependency để mở rộng xử lý nền, nhưng luồng web
+  chính hiện chạy đồng bộ.
+
+## License
+
+Repository chưa khai báo giấy phép sử dụng. Hãy bổ sung tệp `LICENSE` trước
+khi phân phối hoặc sử dụng trong môi trường thương mại.
+README.md
+Full file content failed to load
+Retry
+| --- | --- |
+| Backend | Python, Django 5, Django REST Framework |
+| Backend | Python, Django 5 |
+| Giao diện | Django Templates, CSS, JavaScript thuần |
+
+### Chuyển đổi DOCX/PDF thất bại
+### Chuyển đổi dựa trên LibreOffice thất bại
+
+Cài LibreOffice và bảo đảm lệnh `soffice` có thể chạy, hoặc đặt
+`LIBREOFFICE_PATH` tới executable tương ứng trong `OCR/settings.py`.
+Với các chuyển đổi cần LibreOffice, cài ứng dụng này và bảo đảm lệnh
+`soffice` có thể chạy, hoặc đặt `LIBREOFFICE_PATH` tới executable tương ứng
+trong `OCR/settings.py`.
+
+
+```powershell
+$env:DJANGO_SETTINGS_MODULE = "OCR.settings"
+python -m pytest converter/tests -q
+```
+
+Trên macOS/Linux:
+
+```bash
+pytest converter/tests -q
+DJANGO_SETTINGS_MODULE=OCR.settings python -m pytest converter/tests -q
+```
