@@ -39,18 +39,31 @@ def reorder_pages(
     src = open_pdf(file_path)
     page_count = src.page_count
 
-    # Validate order is a permutation of [0, page_count)
-    if sorted(order) != list(range(page_count)):
+    # Validate all elements in order are unique and within range [0, page_count)
+    if not all(0 <= idx < page_count for idx in order):
         src.close()
         raise ReorderError(
-            f"order must be a permutation of [0, {page_count}). Got: {order!r}"
+            f"All indices in order must be between 0 and {page_count - 1}. Got: {order!r}"
         )
+    if len(set(order)) != len(order):
+        src.close()
+        raise ReorderError(
+            f"Indices in order must be unique. Got: {order!r}"
+        )
+
+    # If partial list is provided, append the rest of the page indices in order
+    if len(order) < page_count:
+        existing_set = set(order)
+        remaining = [i for i in range(page_count) if i not in existing_set]
+        full_order = list(order) + remaining
+    else:
+        full_order = list(order)
 
     logger.info("Reordering %d pages of %s", page_count, file_path)
 
     try:
         out_doc = fitz.open()
-        for new_pos, old_idx in enumerate(order):
+        for new_pos, old_idx in enumerate(full_order):
             out_doc.insert_pdf(src, from_page=old_idx, to_page=old_idx)
             logger.debug("Position %d ← original page %d", new_pos + 1, old_idx + 1)
 
@@ -60,7 +73,10 @@ def reorder_pages(
     except Exception as exc:
         raise ReorderError(f"Reorder failed: {exc}") from exc
     finally:
-        src.close()
+        try:
+            src.close()
+        except Exception:
+            pass
 
     logger.info("Reorder complete → %s", output_path)
     return output_path

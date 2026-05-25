@@ -48,8 +48,8 @@ def merge_pdfs(file_paths: List[str], output_path: str | None = None) -> str:
             if idx == 0:
                 first_meta = src.metadata or {}
             merged_doc.insert_pdf(src)
-            src.close()
             logger.debug("Inserted %s (%d pages)", path, src.page_count)
+            src.close()
 
         # Restore metadata from first file into merged doc
         if first_meta:

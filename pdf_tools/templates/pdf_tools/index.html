@@ -287,7 +287,7 @@
         <label class="form-label">Select PDF Files</label>
         <div class="upload-box" id="uploadBox">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-          <p id="uploadPrompt">Drag & drop your PDF file here, or click to browse</p>
+          <p id="uploadPrompt">{% if tool == 'merge' %}Drag & drop 2 or more PDF files here, or click to browse{% else %}Drag & drop your PDF file here, or click to browse{% endif %}</p>
           <span>Supports standard PDF documents</span>
           <input type="file" name="{% if tool == 'merge' %}file[]{% else %}file{% endif %}" id="fileInput" accept=".pdf" style="display: none;" {% if tool == "merge" %}multiple{% endif %} required />
         </div>
@@ -522,6 +522,7 @@
     const fileInput = document.getElementById('fileInput');
     const selectedFilesList = document.getElementById('selectedFilesList');
     const uploadPrompt = document.getElementById('uploadPrompt');
+    let dtFiles = new DataTransfer();
 
     uploadBox.addEventListener('click', () => fileInput.click());
 
@@ -542,12 +543,27 @@
       uploadBox.style.background = '#fafbfc';
 
       if (e.dataTransfer.files.length) {
-        fileInput.files = e.dataTransfer.files;
+        if (!fileInput.hasAttribute('multiple')) {
+          dtFiles = new DataTransfer();
+        }
+        for (let i = 0; i < e.dataTransfer.files.length; i++) {
+          dtFiles.items.add(e.dataTransfer.files[i]);
+        }
+        fileInput.files = dtFiles.files;
         updateSelectedFilesList();
       }
     });
 
-    fileInput.addEventListener('change', () => {
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) {
+        if (!fileInput.hasAttribute('multiple')) {
+          dtFiles = new DataTransfer();
+        }
+        for (let i = 0; i < e.target.files.length; i++) {
+          dtFiles.items.add(e.target.files[i]);
+        }
+        fileInput.files = dtFiles.files;
+      }
       updateSelectedFilesList();
     });
 
@@ -563,7 +579,8 @@
       selectedFilesList.innerHTML = '';
       const files = fileInput.files;
       if (!files.length) {
-        uploadPrompt.textContent = "Drag & drop your PDF file here, or click to browse";
+        const isMerge = {% if tool == 'merge' %}true{% else %}false{% endif %};
+        uploadPrompt.textContent = isMerge ? "Drag & drop 2 or more PDF files here, or click to browse" : "Drag & drop your PDF file here, or click to browse";
         return;
       }
 
@@ -613,6 +630,12 @@
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
+      
+      const isMerge = {% if tool == 'merge' %}true{% else %}false{% endif %};
+      if (isMerge && fileInput.files.length < 2) {
+        showError("At least 2 PDF files are required for merge.");
+        return;
+      }
       
       loadingOverlay.style.display = 'flex';
       resultCard.style.display = 'none';

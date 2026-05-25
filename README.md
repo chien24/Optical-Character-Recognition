@@ -50,14 +50,11 @@ git clone <repo-url>
 cd OCR_APP
 ```
 
-2. Create and activate a virtual environment
+2. Create and activate a Conda environment
 
 ```bash
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# Unix / macOS
-source .venv/bin/activate
+conda create -n ocr python=3.10
+conda activate ocr
 ```
 
 3. Install dependencies
@@ -96,7 +93,7 @@ python OCR/manage.py createsuperuser
 python OCR/manage.py runserver
 ```
 
-6. Open `http://127.0.0.1:8000/`
+7. Open `http://127.0.0.1:8000/`
 
 ## Environment variables
 

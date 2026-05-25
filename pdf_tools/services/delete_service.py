@@ -65,12 +65,16 @@ def delete_pages(
             src.delete_page(p0)
             logger.debug("Deleted page at original index %d", p0 + 1)
 
+        remaining_count = src.page_count
         save_pdf(src, output_path)
     except DeletePageError:
         raise
     except Exception as exc:
-        src.close()
+        try:
+            src.close()
+        except Exception:
+            pass
         raise DeletePageError(f"Delete pages failed: {exc}") from exc
 
-    logger.info("Delete pages complete → %s (%d pages remaining)", output_path, src.page_count)
+    logger.info("Delete pages complete → %s (%d pages remaining)", output_path, remaining_count)
     return output_path
