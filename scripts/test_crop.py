@@ -46,7 +46,7 @@ def _get_rotate_crop_image(img: np.ndarray, points: np.ndarray) -> np.ndarray:
 
 
 if __name__ == '__main__':
-    root = Path(__file__).resolve().parents[2]
+    root = Path(__file__).resolve().parents[1]
     sample = root / 'paddle' / 'vietnamese-ocr' / 'samples' / 'doanvan1.png'
     if not sample.exists():
         print('Sample image not found:', sample)

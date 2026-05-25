@@ -69,3 +69,13 @@ ocr_engine/services/engines/
 ocr_engine/services/engines/*.pth
 ocr_engine/services/engines/*.pt
 ocr_engine/services/engines/*.onnx
+
+
+# PaddleOCR
+.DS_Store/
+
+predict_temp.ipynb
+.ipynb_checkpoints/
+vi00_vi01_transformer.yml/
+colab_paddle.ipynb/
+output/
