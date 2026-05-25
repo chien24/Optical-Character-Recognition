@@ -36,7 +36,7 @@ from typing import Dict, List, Optional
 from django.conf import settings
 
 from .preprocess_service import load_image
-from .ocr_pipeline import run_ocr_on_pil_image
+from .engines.factory import get_engine
 
 logger = logging.getLogger(__name__)
 
@@ -96,9 +96,9 @@ def _get_pdf_text_threshold() -> int:
 # Private: image document handler
 # ---------------------------------------------------------------------------
 
-def _run_image_ocr(file_path: str, *, ocr_kwargs: Dict) -> Dict:
+def _run_image_ocr(file_path: str, *, engine_name: str, ocr_kwargs: Dict) -> Dict:
     """Run OCR on a single image file. Returns the standard result dict."""
-    logger.info("Document type detected: image — %s", file_path)
+    logger.info("Document type detected: image — %s (engine=%s)", file_path, engine_name)
 
     try:
         pil_img = load_image(file_path)
@@ -107,7 +107,8 @@ def _run_image_ocr(file_path: str, *, ocr_kwargs: Dict) -> Dict:
             f"Cannot open image file {file_path!r}: {exc}"
         ) from exc
 
-    result = run_ocr_on_pil_image(pil_img, **ocr_kwargs)
+    engine = get_engine(engine_name)
+    result = engine.run_on_pil(pil_img, **ocr_kwargs)
 
     pages_detail: List[Dict] = [
         {
@@ -137,6 +138,7 @@ def _run_image_ocr(file_path: str, *, ocr_kwargs: Dict) -> Dict:
 def _run_pdf_ocr(
     file_path: str,
     *,
+    engine_name: str,
     ocr_kwargs: Dict,
     pdf_render_dpi: int,
     pdf_text_threshold: int,
@@ -150,8 +152,8 @@ def _run_pdf_ocr(
     from pdf_tools.services.pdf_render_service import iter_pdf_pages
 
     logger.info(
-        "Document type detected: PDF — %s (DPI=%d, text_threshold=%d)",
-        file_path, pdf_render_dpi, pdf_text_threshold,
+        "Document type detected: PDF — %s (engine=%s, DPI=%d, text_threshold=%d)",
+        file_path, engine_name, pdf_render_dpi, pdf_text_threshold,
     )
 
     total_start = time.perf_counter()
@@ -194,7 +196,8 @@ def _run_pdf_ocr(
         else:
             # ── Scanned page: render already done by generator → OCR ────────
             try:
-                ocr_result = run_ocr_on_pil_image(pil_img, **ocr_kwargs)
+                engine = get_engine(engine_name)
+                ocr_result = engine.run_on_pil(pil_img, **ocr_kwargs)
                 page_text = (
                     ocr_result.get("corrected_text")
                     or ocr_result.get("raw_text", "")
@@ -255,6 +258,7 @@ def _run_pdf_ocr(
 def run_document_ocr(
     file_path: str,
     *,
+    engine_name: str = "custom",
     enhance_contrast: bool = False,
     denoise: bool = False,
     binarize: bool = False,
@@ -271,6 +275,7 @@ def run_document_ocr(
 
     Args:
         file_path:          Absolute path to the document to process.
+        engine_name:        Name of the OCR engine to use ("custom" or "paddle").
         enhance_contrast:   Apply CLAHE contrast enhancement (image preprocessing).
         denoise:            Apply median-blur denoising (image preprocessing).
         binarize:           Apply Otsu binarization (image preprocessing).
@@ -326,9 +331,10 @@ def run_document_ocr(
     if ext in _SUPPORTED_PDF_EXTENSIONS:
         return _run_pdf_ocr(
             file_path,
+            engine_name=engine_name,
             ocr_kwargs=ocr_kwargs,
             pdf_render_dpi=pdf_render_dpi if pdf_render_dpi is not None else _get_pdf_render_dpi(),
             pdf_text_threshold=pdf_text_threshold if pdf_text_threshold is not None else _get_pdf_text_threshold(),
         )
     else:
-        return _run_image_ocr(file_path, ocr_kwargs=ocr_kwargs)
+        return _run_image_ocr(file_path, engine_name=engine_name, ocr_kwargs=ocr_kwargs)

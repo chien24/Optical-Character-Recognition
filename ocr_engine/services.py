@@ -14,14 +14,12 @@ class OCREngineService:
 
     @staticmethod
     def run_ocr(job: Job) -> OCRResult:
-        # This project uses a single custom PyTorch OCR model (ResNetEncoder).
-        # Always use the CustomPytorchEngine; do not support multiple engines.
+        engine_name = job.params.get("ocr_model", "custom") if job.params else "custom"
         try:
-            from .services.engines.custom_pytorch_service import CustomPytorchEngine
-
-            engine = CustomPytorchEngine()
+            from .services.engines.factory import get_engine
+            engine = get_engine(engine_name)
         except Exception:
-            logger.exception("Failed to load CustomPytorchEngine; ensure model and dependencies are available")
+            logger.exception("Failed to load OCR engine %s", engine_name)
             engine = None
 
         if engine is not None and hasattr(engine, "run"):
@@ -35,9 +33,10 @@ class OCREngineService:
             ocr_text = ""
             confidence = None
             pages = 0
+            metadata = {}
 
         orr = OCRResult.objects.create(
-            job=job, text=ocr_text, confidence=confidence, pages=pages, metadata=metadata if "metadata" in locals() else {}
+            job=job, text=ocr_text, confidence=confidence, pages=pages, metadata=metadata
         )
-        logger.info("Created OCRResult for job=%s using CustomPytorchEngine", job.id)
+        logger.info("Created OCRResult for job=%s using %s engine", job.id, engine_name)
         return orr

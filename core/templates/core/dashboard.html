@@ -89,10 +89,13 @@
         </label>
       </div>
 
-      <div class="settings-group" style="padding:12px 14px;background:var(--bg);border-radius:var(--radius);">
-        <p style="font-size:11.5px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Engine</p>
-        <p style="font-size:13px;font-weight:500;">Custom PyTorch (ResNetEncoder)</p>
-        <p style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">Trained model · GPU accelerated</p>
+      <div class="settings-group">
+        <label class="form-label" for="engine-select">OCR Engine</label>
+        <select class="form-select" id="engine-select" name="engine_name" form="ocr-form">
+          <option value="custom">Custom PyTorch (ResNetEncoder)</option>
+          <option value="paddle">PaddleOCR & VietOCR</option>
+        </select>
+        <p style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">Choose the backend processing engine.</p>
       </div>
 
       <button type="submit" form="ocr-form" class="btn btn-primary btn-full" id="start-ocr-btn" style="margin-top:16px;" disabled>

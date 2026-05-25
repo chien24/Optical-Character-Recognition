@@ -10,3 +10,9 @@ class BaseEngine(ABC):
         """Run OCR on image_path and return result dict with keys: text, confidence, pages."""
 
         raise NotImplementedError()
+        
+    @abstractmethod
+    def run_on_pil(self, pil_img, **options) -> Dict[str, Any]:
+        """Run OCR on a PIL.Image and return the result dict."""
+        
+        raise NotImplementedError()

@@ -73,13 +73,14 @@ def start_ocr(request):
     export_md = bool(request.POST.get("export_md"))
     export_txt = bool(request.POST.get("export_txt"))
     ocr_language = request.POST.get("ocr_language", "Auto-detect")
+    engine_name = request.POST.get("engine_name", "custom")
 
     job = ProcessingService.create_job(
         "ocr",
         input_file=saved_file,
         created_by=owner,
         params={
-            "ocr_model": "Custom PyTorch (ResNetEncoder)",
+            "ocr_model": engine_name,
             "ocr_language": ocr_language,
             "export_md": export_md,
             "export_txt": export_txt,
@@ -98,6 +99,7 @@ def start_ocr(request):
         # Way A: Enable advanced visual contrast, denoise and binarization filters by default
         result = run_document_ocr(
             doc_path,
+            engine_name=engine_name,
             enhance_contrast=True,
             denoise=True,
             binarize=True,
@@ -117,7 +119,7 @@ def start_ocr(request):
                 "ocr_time": result.get("ocr_time"),
                 "correction_time": result.get("correction_time"),
                 "total_time": result.get("total_time"),
-                "engine": "CustomPytorchEngine (ResNetEncoder)",
+                "engine": engine_name,
                 "file_type": file_type,
                 "page_count": page_count,
                 # pages_detail enables future features: retry, preview, searchable PDF
@@ -213,11 +215,13 @@ def upload_and_run_ocr(request):
 
     tmp_name = f"ocr_upload_{uuid.uuid4().hex}_{uploaded.name}"
     saved_name = default_storage.save(tmp_name, ContentFile(uploaded.read()))
+    engine_name = request.POST.get("engine_name", "custom")
     try:
         abs_path = default_storage.path(saved_name)
         # Way A: Enable advanced visual contrast, denoise and binarization filters by default
         result = run_document_ocr(
             abs_path,
+            engine_name=engine_name,
             enhance_contrast=True,
             denoise=True,
             binarize=True,
